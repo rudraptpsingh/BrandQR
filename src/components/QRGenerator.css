@@ -36,6 +36,31 @@
   margin-bottom: 2.5rem;
 }
 
+.qr-generator__form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.qr-generator__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.qr-generator__label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.qr-generator__platform-icon {
+  font-size: 1.25rem;
+}
+
 .qr-generator__input-wrapper {
   display: flex;
   flex-direction: column;
@@ -137,6 +162,45 @@
   align-items: center;
   gap: 1.5rem;
   animation: fadeIn 0.3s ease-in;
+}
+
+.qr-generator__landing-info {
+  text-align: center;
+  width: 100%;
+  padding: 1rem;
+  background-color: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.qr-generator__landing-label {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.qr-generator__landing-link {
+  color: #2563eb;
+  text-decoration: none;
+  word-break: break-all;
+  font-size: 0.875rem;
+}
+
+.qr-generator__landing-link:hover {
+  text-decoration: underline;
+}
+
+.qr-generator__actions {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.qr-generator__actions .qr-generator__button {
+  flex: 1;
+  min-width: 200px;
 }
 
 .qr-generator__qr-container {
