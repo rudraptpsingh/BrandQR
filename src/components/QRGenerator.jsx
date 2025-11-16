@@ -4,6 +4,8 @@ import { supabase } from '../lib/supabase'
 import './QRGenerator.css'
 
 const QRGenerator = () => {
+  const [qrType, setQrType] = useState('single')
+  const [singleUrl, setSingleUrl] = useState('')
   const [title, setTitle] = useState('')
   const [websiteUrl, setWebsiteUrl] = useState('')
   const [instagramHandle, setInstagramHandle] = useState('')
@@ -28,76 +30,111 @@ const QRGenerator = () => {
   }
 
   const generateQRCode = async () => {
-    if (!websiteUrl.trim() && !instagramHandle.trim()) {
-      setError('Please enter at least one platform (Website or Instagram)')
-      return
-    }
-
-    if (websiteUrl && !isValidURL(websiteUrl)) {
-      setError('Please enter a valid website URL')
-      return
-    }
-
-    setError('')
-    setIsGenerating(true)
-
-    try {
-      const slug = generateSlug()
-      const platforms = []
-      let displayOrder = 0
-
-      if (websiteUrl.trim()) {
-        platforms.push({
-          platform_type: 'website',
-          platform_value: websiteUrl.trim(),
-          display_order: displayOrder++
-        })
+    if (qrType === 'single') {
+      if (!singleUrl.trim()) {
+        setError('Please enter a URL')
+        return
       }
 
-      if (instagramHandle.trim()) {
-        platforms.push({
-          platform_type: 'instagram',
-          platform_value: instagramHandle.trim().replace('@', ''),
-          display_order: displayOrder++
-        })
+      if (!isValidURL(singleUrl)) {
+        setError('Please enter a valid URL')
+        return
       }
 
-      const { data: qrCodeData, error: qrError } = await supabase
-        .from('qr_codes')
-        .insert([{ slug, title: title.trim() }])
-        .select()
-        .single()
+      setError('')
+      setIsGenerating(true)
 
-      if (qrError) throw qrError
+      try {
+        const fullUrl = singleUrl.startsWith('http') ? singleUrl : `https://${singleUrl}`
+        setLandingPageUrl(fullUrl)
 
-      const platformLinks = platforms.map(p => ({
-        qr_code_id: qrCodeData.id,
-        ...p
-      }))
+        const dataURL = await QRCode.toDataURL(fullUrl, {
+          width: 300,
+          margin: 2,
+          color: {
+            dark: '#000000',
+            light: '#FFFFFF'
+          }
+        })
+        setQrCodeDataURL(dataURL)
+      } catch (err) {
+        setError('Failed to generate QR code. Please try again.')
+        console.error(err)
+      } finally {
+        setIsGenerating(false)
+      }
+    } else {
+      if (!websiteUrl.trim() && !instagramHandle.trim()) {
+        setError('Please enter at least one platform (Website or Instagram)')
+        return
+      }
 
-      const { error: platformError } = await supabase
-        .from('platform_links')
-        .insert(platformLinks)
+      if (websiteUrl && !isValidURL(websiteUrl)) {
+        setError('Please enter a valid website URL')
+        return
+      }
 
-      if (platformError) throw platformError
+      setError('')
+      setIsGenerating(true)
 
-      const landingUrl = `${window.location.origin}/qr/${slug}`
-      setLandingPageUrl(landingUrl)
+      try {
+        const slug = generateSlug()
+        const platforms = []
+        let displayOrder = 0
 
-      const dataURL = await QRCode.toDataURL(landingUrl, {
-        width: 300,
-        margin: 2,
-        color: {
-          dark: '#000000',
-          light: '#FFFFFF'
+        if (websiteUrl.trim()) {
+          platforms.push({
+            platform_type: 'website',
+            platform_value: websiteUrl.trim(),
+            display_order: displayOrder++
+          })
         }
-      })
-      setQrCodeDataURL(dataURL)
-    } catch (err) {
-      setError('Failed to generate QR code. Please try again.')
-      console.error(err)
-    } finally {
-      setIsGenerating(false)
+
+        if (instagramHandle.trim()) {
+          platforms.push({
+            platform_type: 'instagram',
+            platform_value: instagramHandle.trim().replace('@', ''),
+            display_order: displayOrder++
+          })
+        }
+
+        const { data: qrCodeData, error: qrError } = await supabase
+          .from('qr_codes')
+          .insert([{ slug, title: title.trim() }])
+          .select()
+          .single()
+
+        if (qrError) throw qrError
+
+        const platformLinks = platforms.map(p => ({
+          qr_code_id: qrCodeData.id,
+          ...p
+        }))
+
+        const { error: platformError } = await supabase
+          .from('platform_links')
+          .insert(platformLinks)
+
+        if (platformError) throw platformError
+
+        const landingUrl = `${window.location.origin}/qr/${slug}`
+        setLandingPageUrl(landingUrl)
+
+        const dataURL = await QRCode.toDataURL(landingUrl, {
+          width: 300,
+          margin: 2,
+          color: {
+            dark: '#000000',
+            light: '#FFFFFF'
+          }
+        })
+        setQrCodeDataURL(dataURL)
+      } catch (err) {
+        setError('Failed to generate QR code. Please try again.')
+        console.error(err)
+      } finally {
+        setIsGenerating(false)
+      }
     }
   }
 
@@ -113,6 +150,7 @@ const QRGenerator = () => {
   }
 
   const resetForm = () => {
+    setSingleUrl('')
     setTitle('')
     setWebsiteUrl('')
     setInstagramHandle('')
@@ -131,13 +169,48 @@ const QRGenerator = () => {
     <div className="qr-generator">
       <div className="qr-generator__container">
         <header className="qr-generator__header">
-          <h1 className="qr-generator__title">Multi-Platform QR Generator</h1>
-          <p className="qr-generator__subtitle">Create QR codes that link to multiple platforms</p>
+          <h1 className="qr-generator__title">QR Code Generator</h1>
+          <p className="qr-generator__subtitle">Create QR codes for single links or multiple platforms</p>
         </header>
 
         {!qrCodeDataURL ? (
           <div className="qr-generator__input-section">
             <div className="qr-generator__form">
+              <div className="qr-generator__type-selector">
+                <button
+                  className={`qr-generator__type-button ${qrType === 'single' ? 'qr-generator__type-button--active' : ''}`}
+                  onClick={() => setQrType('single')}
+                  disabled={isGenerating}
+                >
+                  Single Link
+                </button>
+                <button
+                  className={`qr-generator__type-button ${qrType === 'multi' ? 'qr-generator__type-button--active' : ''}`}
+                  onClick={() => setQrType('multi')}
+                  disabled={isGenerating}
+                >
+                  Multi-Platform
+                </button>
+              </div>
+
+              {qrType === 'single' ? (
+                <div className="qr-generator__field">
+                  <label className="qr-generator__label" htmlFor="single-url">
+                    URL
+                  </label>
+                  <input
+                    id="single-url"
+                    type="text"
+                    className="qr-generator__input"
+                    placeholder="e.g., example.com or https://example.com"
+                    value={singleUrl}
+                    onChange={(e) => setSingleUrl(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    disabled={isGenerating}
+                  />
+                </div>
+              ) : (
+                <>
               <div className="qr-generator__field">
                 <label className="qr-generator__label" htmlFor="title">
                   Title (Optional)
@@ -171,8 +244,8 @@ const QRGenerator = () => {
                 />
               </div>
 
-              <div className="qr-generator__field">
-                <label className="qr-generator__label" htmlFor="instagram">
+                <div className="qr-generator__field">
+                  <label className="qr-generator__label" htmlFor="instagram">
                   <span className="qr-generator__platform-icon">📷</span>
                   Instagram Handle
                 </label>
@@ -184,9 +257,11 @@ const QRGenerator = () => {
                   value={instagramHandle}
                   onChange={(e) => setInstagramHandle(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  disabled={isGenerating}
-                />
-              </div>
+                    disabled={isGenerating}
+                  />
+                </div>
+              </>
+              )}
 
               <button
                 className="qr-generator__button qr-generator__button--primary"
