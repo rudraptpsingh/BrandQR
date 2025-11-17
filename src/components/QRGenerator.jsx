@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import QRCode from 'qrcode'
 import { supabase } from '../lib/supabase'
 import './QRGenerator.css'
@@ -27,6 +27,31 @@ const LINK_PRESETS = [
 
 const MAX_LINKS = 5
 const initialScanStats = { weekCount: null, total: null, topLink: null }
+
+const useSupabaseSession = () => {
+  const [session, setSession] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let isMounted = true
+    supabase.auth.getSession().then(({ data }) => {
+      if (isMounted) {
+        setSession(data.session)
+        setLoading(false)
+      }
+    })
+    const { data: subscription } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession)
+      setLoading(false)
+    })
+    return () => {
+      isMounted = false
+      subscription?.subscription.unsubscribe()
+    }
+  }, [])
+
+  return { session, loading }
+}
 
 const createRowId = () => {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -87,6 +112,10 @@ const formatTimestamp = (value) => {
 }
 
 const QRGenerator = () => {
+  const { session, loading: authLoading } = useSupabaseSession()
+  const isAuthenticated = Boolean(session?.user)
+  const userId = session?.user?.id || null
+  const appOrigin = typeof window !== 'undefined' ? window.location.origin : ''
   const [qrType, setQrType] = useState('single')
   const [singleFriendlyName, setSingleFriendlyName] = useState('')
   const [singleUrl, setSingleUrl] = useState('')
@@ -104,12 +133,25 @@ const QRGenerator = () => {
   const [scanStats, setScanStats] = useState(initialScanStats)
   const [linkHealthStatus, setLinkHealthStatus] = useState('Not checked')
   const [linkHealthMessage, setLinkHealthMessage] = useState('Generate a QR to run a quick check.')
+  const [emailInput, setEmailInput] = useState('')
+  const [emailStatus, setEmailStatus] = useState(null)
+  const [myQRCodes, setMyQRCodes] = useState([])
+  const [myCodesLoading, setMyCodesLoading] = useState(false)
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false)
+  const [previewLoading, setPreviewLoading] = useState(false)
+
+  const isBusy = isGenerating || previewLoading
 
   const generateSlug = () => {
     return Math.random().toString(36).substring(2, 10) + Date.now().toString(36)
   }
 
   const handleIntentChange = (intentId) => {
+    if (intentId === 'multi' && !isAuthenticated) {
+      setShowAuthPrompt(true)
+      setError('Sign in to create and manage link stacks.')
+      return
+    }
     setQrType(intentId)
     setError('')
   }
@@ -129,6 +171,88 @@ const QRGenerator = () => {
         return nextLink
       })
     )
+  }
+
+  const loadMyQRCodes = async (uid) => {
+    if (!uid) return
+    setMyCodesLoading(true)
+    try {
+      const { data, error } = await supabase
+        .from('qr_codes')
+        .select('id, title, slug, created_at, updated_at, qr_type')
+        .eq('user_id', uid)
+        .order('updated_at', { ascending: false })
+
+      if (error) throw error
+      setMyQRCodes(data || [])
+    } catch (err) {
+      console.error('Failed to load saved QR codes', err)
+    } finally {
+      setMyCodesLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (userId) {
+      loadMyQRCodes(userId)
+    } else {
+      setMyQRCodes([])
+      if (qrType === 'multi') {
+        setQrType('single')
+      }
+    }
+  }, [userId])
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      setShowAuthPrompt(false)
+      setEmailStatus(null)
+    }
+  }, [isAuthenticated])
+
+  const handleGoogleSignIn = async () => {
+    const redirectTo = typeof window !== 'undefined' ? window.location.origin : undefined
+    try {
+      await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo
+        }
+      })
+    } catch (err) {
+      console.error('Google sign-in failed', err)
+    }
+  }
+
+  const handleEmailLogin = async (event) => {
+    event.preventDefault()
+    if (!emailInput.trim()) {
+      setEmailStatus({ state: 'error', message: 'Enter an email address.' })
+      return
+    }
+    setEmailStatus({ state: 'loading', message: 'Sending magic link…' })
+    const redirectTo = typeof window !== 'undefined' ? window.location.origin : undefined
+    const { error } = await supabase.auth.signInWithOtp({
+      email: emailInput.trim(),
+      options: {
+        emailRedirectTo: redirectTo
+      }
+    })
+    if (error) {
+      setEmailStatus({ state: 'error', message: error.message })
+    } else {
+      setEmailStatus({ state: 'success', message: 'Check your inbox for the sign-in link.' })
+    }
+  }
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut()
+    setMyQRCodes([])
+    setQrRecord(null)
+    setScanStats(initialScanStats)
+    setQrCodeDataURL('')
+    setLandingPageUrl('')
+    setGeneratedType(null)
   }
 
   const addLinkRow = (presetId = null) => {
@@ -201,6 +325,12 @@ const QRGenerator = () => {
       return
     }
 
+    if (!isAuthenticated || !userId) {
+      setError('Sign in to create and manage link stacks.')
+      setShowAuthPrompt(true)
+      return
+    }
+
     const cleanedLinks = links
       .map((link) => ({
         ...link,
@@ -236,7 +366,7 @@ const QRGenerator = () => {
       const slug = generateSlug()
       const { data: qrCodeData, error: qrError } = await supabase
         .from('qr_codes')
-          .insert([{ slug, title: stackTitle.trim(), qr_type: 'multi' }])
+        .insert([{ slug, title: stackTitle.trim(), qr_type: 'multi', user_id: userId }])
         .select()
         .single()
 
@@ -257,7 +387,7 @@ const QRGenerator = () => {
 
       if (platformError) throw platformError
 
-      const landingUrl = `${window.location.origin}/qr/${slug}`
+      const landingUrl = `${appOrigin}/qr/${slug}`
       setLandingPageUrl(landingUrl)
 
       const dataURL = await QRCode.toDataURL(landingUrl, {
@@ -272,10 +402,11 @@ const QRGenerator = () => {
       setQrCodeDataURL(dataURL)
       setGeneratedType('multi')
       setLastUpdated(new Date().toISOString())
-        setQrRecord(qrCodeData)
-        setLinkHealthStatus('Link stack saved')
-        setLinkHealthMessage('Each link is hosted on your landing page.')
-        await refreshAnalytics(qrCodeData.id)
+      setQrRecord(qrCodeData)
+      setLinkHealthStatus('Link stack saved')
+      setLinkHealthMessage('Each link is hosted on your landing page.')
+      await refreshAnalytics(qrCodeData.id)
+      await loadMyQRCodes(userId)
     } catch (err) {
       setError('Failed to save your link stack. Please try again.')
       console.error(err)
@@ -346,6 +477,34 @@ const QRGenerator = () => {
     }
   }
 
+  const handleLoadInsights = async (code) => {
+    if (!code) return
+    setPreviewLoading(true)
+    try {
+      const landingUrl = `${appOrigin}/qr/${code.slug}`
+      const dataURL = await QRCode.toDataURL(landingUrl, {
+        width: 300,
+        margin: 2,
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF'
+        }
+      })
+      setQrCodeDataURL(dataURL)
+      setLandingPageUrl(landingUrl)
+      setGeneratedType(code.qr_type || 'multi')
+      setQrRecord({ id: code.id, slug: code.slug })
+      setLastUpdated(code.updated_at || code.created_at)
+      setLinkHealthStatus('Link stack saved')
+      setLinkHealthMessage('Each link is hosted on your landing page.')
+      await refreshAnalytics(code.id)
+    } catch (err) {
+      console.error('Failed to load insights for QR', err)
+    } finally {
+      setPreviewLoading(false)
+    }
+  }
+
   const hasAnalytics = Boolean(qrRecord)
   const insightCards = [
     {
@@ -383,14 +542,63 @@ const QRGenerator = () => {
 
   return (
     <div className="qr-generator">
-      <div className="qr-generator__container">
-        <header className="qr-generator__header">
-          <p className="qr-generator__eyebrow">Free forever • no sign-up needed</p>
-          <h1 className="qr-generator__title">Create a QR in under a minute</h1>
-          <p className="qr-generator__subtitle">Choose a single spotlight link or build a tiny landing page.</p>
-        </header>
+        <div className="qr-generator__container">
+          <header className="qr-generator__header">
+            <p className="qr-generator__eyebrow">Free forever • sign in to save link stacks</p>
+            <h1 className="qr-generator__title">Create a QR in under a minute</h1>
+            <p className="qr-generator__subtitle">Choose a single spotlight link or build a tiny landing page.</p>
+          </header>
 
-        <section aria-label="Choose what your QR should do" className="qr-generator__intent">
+          <section className="qr-generator__auth-card" aria-label="Account">
+            {authLoading ? (
+              <p className="qr-generator__muted">Checking your account…</p>
+            ) : isAuthenticated ? (
+              <div className="qr-generator__auth-signed">
+                <div>
+                  <span className="qr-generator__auth-label">Signed in as</span>
+                  <strong>{session.user.email || session.user.user_metadata?.full_name || 'Account'}</strong>
+                </div>
+                <button
+                  type="button"
+                  className="qr-generator__button qr-generator__button--ghost"
+                  onClick={handleSignOut}
+                >
+                  Sign out
+                </button>
+              </div>
+            ) : (
+              <div className="qr-generator__auth-actions">
+                <button
+                  type="button"
+                  className="qr-generator__button qr-generator__button--secondary"
+                  onClick={handleGoogleSignIn}
+                >
+                  Continue with Google
+                </button>
+                <div className="qr-generator__auth-divider">or</div>
+                <form className="qr-generator__auth-form" onSubmit={handleEmailLogin}>
+                  <input
+                    type="email"
+                    className="qr-generator__auth-input"
+                    placeholder="you@example.com"
+                    value={emailInput}
+                    onChange={(e) => setEmailInput(e.target.value)}
+                    required
+                  />
+                  <button type="submit" className="qr-generator__button qr-generator__button--primary">
+                    Email me a link
+                  </button>
+                </form>
+                {emailStatus && (
+                  <p className={`qr-generator__auth-status qr-generator__auth-status--${emailStatus.state}`}>
+                    {emailStatus.message}
+                  </p>
+                )}
+              </div>
+            )}
+          </section>
+
+          <section aria-label="Choose what your QR should do" className="qr-generator__intent">
           <div className="qr-generator__intent-grid">
             {INTENT_OPTIONS.map((option) => (
               <button
@@ -398,7 +606,7 @@ const QRGenerator = () => {
                 type="button"
                 className={`qr-generator__intent-card ${qrType === option.id ? 'qr-generator__intent-card--active' : ''}`}
                 onClick={() => handleIntentChange(option.id)}
-                disabled={isGenerating}
+                  disabled={isBusy}
               >
                 <div className="qr-generator__intent-card-header">
                   <h2>{option.title}</h2>
@@ -410,6 +618,12 @@ const QRGenerator = () => {
             ))}
           </div>
         </section>
+
+          {showAuthPrompt && !isAuthenticated && (
+            <div className="qr-generator__notice" role="status">
+              Sign in above to create and manage link stacks.
+            </div>
+          )}
 
         <section className="qr-generator__panel">
           <div className="qr-generator__form-column">
@@ -427,7 +641,7 @@ const QRGenerator = () => {
                     placeholder="Menu, RSVP, promo..."
                     value={singleFriendlyName}
                     onChange={(e) => setSingleFriendlyName(e.target.value)}
-                    disabled={isGenerating}
+                    disabled={isBusy}
                   />
                 </div>
                 <div className="qr-generator__field">
@@ -441,7 +655,7 @@ const QRGenerator = () => {
                     placeholder="example.com or https://example.com"
                     value={singleUrl}
                     onChange={(e) => setSingleUrl(e.target.value)}
-                    disabled={isGenerating}
+                    disabled={isBusy}
                   />
                   <p className="qr-generator__hint">We’ll keep it scan-safe and add HTTPS if you forget.</p>
                 </div>
@@ -460,7 +674,7 @@ const QRGenerator = () => {
                     placeholder="Pop-up menu, Launch day, Tour links..."
                     value={stackTitle}
                     onChange={(e) => setStackTitle(e.target.value)}
-                    disabled={isGenerating}
+                    disabled={isBusy}
                   />
                 </div>
 
@@ -468,13 +682,13 @@ const QRGenerator = () => {
                   <span className="qr-generator__label">Quick add</span>
                   <div className="qr-generator__preset-buttons">
                     {LINK_PRESETS.map((preset) => (
-                      <button
-                        key={preset.id}
-                        type="button"
-                        className="qr-generator__preset-button"
-                        onClick={() => addLinkRow(preset.id)}
-                        disabled={isGenerating || presetButtonsDisabled}
-                      >
+                        <button
+                          key={preset.id}
+                          type="button"
+                          className="qr-generator__preset-button"
+                          onClick={() => addLinkRow(preset.id)}
+                          disabled={isBusy || presetButtonsDisabled}
+                        >
                         <span aria-hidden="true">{preset.icon}</span>
                         {preset.label}
                       </button>
@@ -492,7 +706,7 @@ const QRGenerator = () => {
                             type="button"
                             className="qr-generator__icon-button"
                             onClick={() => moveLink(link.id, -1)}
-                            disabled={index === 0 || isGenerating}
+                            disabled={index === 0 || isBusy}
                             aria-label="Move link up"
                           >
                             ↑
@@ -501,7 +715,7 @@ const QRGenerator = () => {
                             type="button"
                             className="qr-generator__icon-button"
                             onClick={() => moveLink(link.id, 1)}
-                            disabled={index === links.length - 1 || isGenerating}
+                            disabled={index === links.length - 1 || isBusy}
                             aria-label="Move link down"
                           >
                             ↓
@@ -510,7 +724,7 @@ const QRGenerator = () => {
                             type="button"
                             className="qr-generator__icon-button qr-generator__icon-button--danger"
                             onClick={() => removeLinkRow(link.id)}
-                            disabled={links.length === 1 || isGenerating}
+                            disabled={links.length === 1 || isBusy}
                             aria-label="Remove link"
                           >
                             ✕
@@ -529,7 +743,7 @@ const QRGenerator = () => {
                             placeholder="e.g., Menu, Tickets, Instagram"
                             value={link.label}
                             onChange={(e) => handleLinkChange(link.id, 'label', e.target.value)}
-                            disabled={isGenerating}
+                            disabled={isBusy}
                           />
                         </div>
                         <div className="qr-generator__field">
@@ -543,7 +757,7 @@ const QRGenerator = () => {
                             placeholder={link.placeholder}
                             value={link.url}
                             onChange={(e) => handleLinkChange(link.id, 'url', e.target.value)}
-                            disabled={isGenerating}
+                            disabled={isBusy}
                           />
                         </div>
                       </div>
@@ -556,7 +770,7 @@ const QRGenerator = () => {
                   type="button"
                   className="qr-generator__button qr-generator__button--ghost"
                   onClick={() => addLinkRow()}
-                  disabled={isGenerating || links.length >= MAX_LINKS}
+                  disabled={isBusy || links.length >= MAX_LINKS}
                 >
                   + Add another link
                 </button>
@@ -573,7 +787,7 @@ const QRGenerator = () => {
               <button
                 className="qr-generator__button qr-generator__button--primary"
                 onClick={generateQRCode}
-                disabled={isGenerating}
+                disabled={isBusy}
               >
                 {isGenerating ? 'Generating...' : 'Create QR code'}
               </button>
@@ -648,6 +862,48 @@ const QRGenerator = () => {
                   </div>
                 ))}
               </div>
+            </div>
+
+            <div className="qr-generator__card">
+              <h3>My link stacks</h3>
+              {authLoading ? (
+                <p className="qr-generator__muted">Checking your account…</p>
+              ) : !isAuthenticated ? (
+                <p className="qr-generator__muted">Sign in above to view saved link stacks.</p>
+              ) : myCodesLoading ? (
+                <p className="qr-generator__muted">Loading your QR codes…</p>
+              ) : myQRCodes.length === 0 ? (
+                <p className="qr-generator__muted">You haven’t saved any link stacks yet.</p>
+              ) : (
+                <ul className="qr-generator__list">
+                  {myQRCodes.map((code) => (
+                    <li key={code.id} className="qr-generator__list-item">
+                      <div className="qr-generator__list-info">
+                        <strong>{code.title || 'Untitled link stack'}</strong>
+                        <span>{formatTimestamp(code.updated_at || code.created_at)}</span>
+                      </div>
+                      <div className="qr-generator__list-actions">
+                        <button
+                          type="button"
+                          className="qr-generator__button qr-generator__button--ghost"
+                          onClick={() => handleLoadInsights(code)}
+                          disabled={previewLoading}
+                        >
+                          {previewLoading ? 'Loading…' : 'View insights'}
+                        </button>
+                        <a
+                          href={`${appOrigin}/qr/${code.slug}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="qr-generator__button qr-generator__button--text"
+                        >
+                          Open
+                        </a>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </div>
         </section>

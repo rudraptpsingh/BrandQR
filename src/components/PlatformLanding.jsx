@@ -13,30 +13,26 @@ const PlatformLanding = () => {
   useEffect(() => {
     const fetchQRData = async () => {
       try {
-        const { data: qrCode, error: qrError } = await supabase
-          .from('qr_codes')
-          .select('id, title')
-          .eq('slug', slug)
-          .maybeSingle()
+        const { data, error: payloadError } = await supabase.rpc('public_get_qr_payload', {
+          slug_input: slug
+        })
 
-        if (qrError) throw qrError
-        if (!qrCode) {
+        if (payloadError) throw payloadError
+        const payload = data && data.length > 0 ? data[0] : null
+
+        if (!payload) {
           setError('QR code not found')
           setLoading(false)
           return
         }
 
-        setQrData(qrCode)
-
-        const { data: platformLinks, error: platformError } = await supabase
-          .from('platform_links')
-          .select('platform_type, platform_value, display_order, link_label, link_url')
-          .eq('qr_code_id', qrCode.id)
-          .order('display_order', { ascending: true })
-
-        if (platformError) throw platformError
-
-        setPlatforms(platformLinks || [])
+        setQrData({
+          id: payload.qr_id,
+          title: payload.title,
+          qr_type: payload.qr_type,
+          slug: payload.slug
+        })
+        setPlatforms(payload.platforms || [])
       } catch (err) {
         setError('Failed to load platform links')
         console.error(err)
