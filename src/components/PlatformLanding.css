@@ -72,6 +72,19 @@
   flex-shrink: 0;
 }
 
+.platform-landing__avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: #eef2ff;
+  color: #4338ca;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
 .platform-landing__loading,
 .platform-landing__error,
 .platform-landing__empty {
