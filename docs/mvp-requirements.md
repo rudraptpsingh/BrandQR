@@ -38,20 +38,21 @@
 - Cards use friendly headlines + one actionable sentence; copy stored centrally for reuse.
 
 ### 6. Data Model / Backend Notes
-- Extend `platform_links` with `link_label` and `link_url` so we can store human-readable labels and fully-qualified URLs.
-- Keep existing `platform_type/platform_value` for compatibility; new inserts populate both sets of fields.
-- Consider adding `qr_type`, `status`, `next_version`, `fallback_url`, `updated_at` to `qr_codes` in subsequent migrations.
-- Background jobs needed later:
-  - Link health checker (writes to `qr_codes.status_details`).
-  - Scheduler for planned swaps.
-  - Analytics aggregator for scan counts per QR/link.
+- Extend `platform_links` with `link_label` and `link_url` so we can store human-readable labels and fully-qualified URLs. *(Done via `20251117123045_add_link_metadata` migration.)*
+- `qr_codes` needs lifecycle metadata (`qr_type`, `status`, `next_version`, `next_version_at`, `fallback_url`, `updated_at`, `last_health_status`, `last_health_checked_at`). See `backend-plan.md` for the full schema layout and automation flow.
+- New `qr_scans` table (plus daily rollups later) powers insights such as scan trends and top-performing links.
+- Background jobs & functions (outlined in `backend-plan.md`) cover:
+  - Link health checker (updates `last_health_status`).
+  - Scheduler that promotes `next_version` at the right time.
+  - `/api/scan` endpoint + aggregations for analytics.
 
 ### 7. UX Copy / Onboarding
 - Hero subtitle: “Single spotlight link or a stack of CTAs—pick one and publish.”
 - Empty states explain why each intent exists and link to blog/docs for inspiration.
-- Confirmations reinforce free-forever promise and suggest upgrading later for automation/insights.
+- Confirmations reinforce the free-forever promise and highlight lifecycle guardrails (“Link health checks keep scans safe.”).
 
 This spec should guide the immediate engineering work:
 1. Build the intent selection experience and simplified forms.
 2. Implement the multi-link editor + Supabase persistence for labels/URLs.
 3. Add the lifecycle strip + insight card scaffolding so analytics/lifecycle data can plug in seamlessly when backend support lands.
+4. Execute the backend plan so lifecycle metadata, scan capture, and link-health services populate the new UI surfaces.
