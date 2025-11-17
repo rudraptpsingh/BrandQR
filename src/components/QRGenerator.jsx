@@ -26,6 +26,7 @@ const LINK_PRESETS = [
 ]
 
 const MAX_LINKS = 5
+const initialScanStats = { weekCount: null, total: null, topLink: null }
 
 const createRowId = () => {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -98,6 +99,11 @@ const QRGenerator = () => {
   const [status] = useState('Active')
   const [lastUpdated, setLastUpdated] = useState(null)
   const [generatedType, setGeneratedType] = useState(null)
+  const [qrRecord, setQrRecord] = useState(null)
+  const [analyticsLoading, setAnalyticsLoading] = useState(false)
+  const [scanStats, setScanStats] = useState(initialScanStats)
+  const [linkHealthStatus, setLinkHealthStatus] = useState('Not checked')
+  const [linkHealthMessage, setLinkHealthMessage] = useState('Generate a QR to run a quick check.')
 
   const generateSlug = () => {
     return Math.random().toString(36).substring(2, 10) + Date.now().toString(36)
@@ -182,6 +188,10 @@ const QRGenerator = () => {
         setQrCodeDataURL(dataURL)
         setGeneratedType('single')
         setLastUpdated(new Date().toISOString())
+        setQrRecord(null)
+        setScanStats(initialScanStats)
+        setLinkHealthStatus('URL verified')
+        setLinkHealthMessage('Format and protocol look good for scanning.')
       } catch (err) {
         setError('Failed to generate the QR code. Please try again.')
         console.error(err)
@@ -226,7 +236,7 @@ const QRGenerator = () => {
       const slug = generateSlug()
       const { data: qrCodeData, error: qrError } = await supabase
         .from('qr_codes')
-        .insert([{ slug, title: stackTitle.trim() }])
+          .insert([{ slug, title: stackTitle.trim(), qr_type: 'multi' }])
         .select()
         .single()
 
@@ -262,6 +272,10 @@ const QRGenerator = () => {
       setQrCodeDataURL(dataURL)
       setGeneratedType('multi')
       setLastUpdated(new Date().toISOString())
+        setQrRecord(qrCodeData)
+        setLinkHealthStatus('Link stack saved')
+        setLinkHealthMessage('Each link is hosted on your landing page.')
+        await refreshAnalytics(qrCodeData.id)
     } catch (err) {
       setError('Failed to save your link stack. Please try again.')
       console.error(err)
@@ -291,30 +305,77 @@ const QRGenerator = () => {
     setError('')
     setGeneratedType(null)
     setLastUpdated(null)
+    setQrRecord(null)
+    setScanStats(initialScanStats)
+    setLinkHealthStatus('Not checked')
+    setLinkHealthMessage('Generate a QR to run a quick check.')
   }
 
+  const refreshAnalytics = async (qrCodeId) => {
+    if (!qrCodeId) return
+    setAnalyticsLoading(true)
+    try {
+      const { data, error } = await supabase
+        .from('qr_scans')
+        .select('link_label, scanned_at')
+        .eq('qr_code_id', qrCodeId)
+
+      if (error) throw error
+
+      const now = new Date()
+      const weekStart = new Date(now)
+      weekStart.setHours(0, 0, 0, 0)
+      weekStart.setDate(weekStart.getDate() - weekStart.getDay())
+
+      const total = data.length
+      const weekCount = data.filter((item) => new Date(item.scanned_at) >= weekStart).length
+
+      const linkCounts = data.reduce((acc, item) => {
+        const label = item.link_label || 'Landing view'
+        acc[label] = (acc[label] || 0) + 1
+        return acc
+      }, {})
+
+      const topLink = Object.entries(linkCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || null
+      setScanStats({ total, weekCount, topLink })
+    } catch (err) {
+      console.error('Failed to load scan stats', err)
+      setScanStats(initialScanStats)
+    } finally {
+      setAnalyticsLoading(false)
+    }
+  }
+
+  const hasAnalytics = Boolean(qrRecord)
   const insightCards = [
     {
       id: 'scans',
       label: 'Scans this week',
-      value: qrCodeDataURL ? 'Tracking soon' : '—',
-      helper: 'We’ll highlight trends once scans start coming in.'
+      value: hasAnalytics ? (analyticsLoading ? 'Loading…' : (scanStats.weekCount ?? 0)) : 'Link stacks only',
+      helper: hasAnalytics
+        ? analyticsLoading
+          ? 'Fetching the latest scan activity.'
+          : `People scanned this QR ${scanStats.weekCount ?? 0} time(s) since Sunday.`
+        : 'Create a link stack to start capturing scan analytics.'
     },
     {
       id: 'health',
       label: 'Link health',
-      value: 'Looks good',
-      helper: 'Automatic link checks arrive with the next backend update.'
+      value: linkHealthStatus,
+      helper: linkHealthMessage
     }
   ]
 
-  if ((generatedType || qrType) === 'multi') {
-    const firstLink = links.find((link) => link.url.trim().length > 0)
+  if (hasAnalytics) {
     insightCards.push({
       id: 'top-link',
       label: 'Top performer',
-      value: firstLink?.label || 'Not ranked yet',
-      helper: 'Once analytics are live, we’ll show the most-tapped link here.'
+      value: analyticsLoading ? 'Loading…' : scanStats.topLink || 'No scans yet',
+      helper: analyticsLoading
+        ? 'Crunching tap data.'
+        : scanStats.topLink
+          ? 'Most tapped link so far.'
+          : 'We’ll highlight a link once it gets a scan.'
     })
   }
 
