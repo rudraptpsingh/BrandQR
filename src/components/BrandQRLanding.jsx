@@ -10,6 +10,7 @@ const BrandQRLanding = () => {
   const [isTerminalVisible, setIsTerminalVisible] = useState(false)
   const [terminalText, setTerminalText] = useState('')
   const [terminalQR, setTerminalQR] = useState('')
+  const [isDashboardActive, setIsDashboardActive] = useState(false)
   const debounceTimer = useRef(null)
   const canvasRef = useRef(null)
 
@@ -209,7 +210,7 @@ BrandQR.generate("https://brandqr.com")
           </div>
 
           <div className="brandqr__hero-visual">
-            <div className="brandqr__dashboard">
+            <div className={`brandqr__dashboard ${isDashboardActive ? 'brandqr__dashboard--active' : ''}`}>
               <div className="brandqr__dashboard-header">
                 <div className="brandqr__dashboard-logo">
                   <div className="brandqr__dashboard-logo-icon"></div>
@@ -229,6 +230,10 @@ BrandQR.generate("https://brandqr.com")
                     placeholder="Enter URL, Text, or More..."
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
+                    onFocus={() => setIsDashboardActive(true)}
+                    onBlur={() => {
+                      if (!inputValue) setIsDashboardActive(false)
+                    }}
                   />
                   <div className="brandqr__type-badge">
                     <span className="brandqr__type-icon">{getTypeIcon(detectedType)}</span>
@@ -272,28 +277,30 @@ BrandQR.generate("https://brandqr.com")
                   </div>
                 </div>
 
-                {qrCodeDataURL && (
-                  <div className="brandqr__qr-preview">
-                    <img src={qrCodeDataURL} alt="QR Code Preview" className="brandqr__qr-image" />
-                  </div>
-                )}
+                <div className={`brandqr__qr-results ${qrCodeDataURL ? 'brandqr__qr-results--visible' : ''}`}>
+                  {qrCodeDataURL && (
+                    <>
+                      <div className="brandqr__qr-preview">
+                        <img src={qrCodeDataURL} alt="QR Code Preview" className="brandqr__qr-image" />
+                      </div>
 
-                {qrCodeDataURL && (
-                  <div className="brandqr__download-buttons">
-                    <button
-                      className="brandqr__download-btn brandqr__download-btn--png"
-                      onClick={() => downloadQRCode('png')}
-                    >
-                      Download PNG
-                    </button>
-                    <button
-                      className="brandqr__download-btn brandqr__download-btn--svg"
-                      onClick={() => downloadQRCode('svg')}
-                    >
-                      Download SVG
-                    </button>
-                  </div>
-                )}
+                      <div className="brandqr__download-buttons">
+                        <button
+                          className="brandqr__download-btn brandqr__download-btn--png"
+                          onClick={() => downloadQRCode('png')}
+                        >
+                          Download PNG
+                        </button>
+                        <button
+                          className="brandqr__download-btn brandqr__download-btn--svg"
+                          onClick={() => downloadQRCode('svg')}
+                        >
+                          Download SVG
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           </div>
