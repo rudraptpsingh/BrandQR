@@ -94,36 +94,49 @@ const BrandQRLanding = () => {
 
         ctx.drawImage(qrImg, 0, 0)
 
-        const logoSize = Math.floor(qrImg.width * 0.15)
-        const logoX = (canvas.width - logoSize) / 2
-        const logoY = (canvas.height - logoSize) / 2
+        const centerX = canvas.width / 2
+        const centerY = canvas.height / 2
 
-        const padding = Math.floor(logoSize * 0.15)
-        const bgSize = logoSize + padding * 2
+        const clearZoneSize = Math.floor(qrImg.width * 0.22)
+        const logoSize = Math.floor(clearZoneSize * 0.75)
 
         ctx.fillStyle = '#FFFFFF'
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.15)'
+        ctx.shadowBlur = 8
+        ctx.shadowOffsetX = 0
+        ctx.shadowOffsetY = 2
+
         ctx.beginPath()
-        ctx.arc(
-          canvas.width / 2,
-          canvas.height / 2,
-          bgSize / 2,
-          0,
-          Math.PI * 2
-        )
+        ctx.arc(centerX, centerY, clearZoneSize / 2, 0, Math.PI * 2)
         ctx.fill()
+
+        ctx.shadowColor = 'transparent'
+        ctx.shadowBlur = 0
+        ctx.shadowOffsetX = 0
+        ctx.shadowOffsetY = 0
+
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.08)'
+        ctx.lineWidth = 1.5
+        ctx.beginPath()
+        ctx.arc(centerX, centerY, clearZoneSize / 2 - 1, 0, Math.PI * 2)
+        ctx.stroke()
+
+        const logoX = centerX - logoSize / 2
+        const logoY = centerY - logoSize / 2
 
         ctx.save()
         ctx.beginPath()
-        ctx.arc(
-          canvas.width / 2,
-          canvas.height / 2,
-          logoSize / 2,
-          0,
-          Math.PI * 2
-        )
+        ctx.arc(centerX, centerY, logoSize / 2, 0, Math.PI * 2)
         ctx.clip()
+
         ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize)
         ctx.restore()
+
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)'
+        ctx.lineWidth = 2
+        ctx.beginPath()
+        ctx.arc(centerX, centerY, logoSize / 2 + 1, 0, Math.PI * 2)
+        ctx.stroke()
 
         resolve(canvas.toDataURL('image/png'))
       }
