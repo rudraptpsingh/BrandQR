@@ -2,6 +2,8 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import BrandQRLanding from './components/BrandQRLanding'
 import PlatformLanding from './components/PlatformLanding'
+import GuidesListing from './components/guides/GuidesListing'
+import BrandedQRGuide from './components/guides/BrandedQRGuide'
 import './App.css'
 
 function App() {
@@ -12,6 +14,8 @@ function App() {
           <Routes>
             <Route path="/" element={<BrandQRLanding />} />
             <Route path="/qr/:slug" element={<PlatformLanding />} />
+            <Route path="/guides" element={<GuidesListing />} />
+            <Route path="/guides/:slug" element={<BrandedQRGuide />} />
           </Routes>
         </div>
       </Router>
