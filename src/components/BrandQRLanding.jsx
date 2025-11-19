@@ -15,8 +15,11 @@ const BrandQRLanding = () => {
   const [activeDemo, setActiveDemo] = useState(0)
   const [demoQRs, setDemoQRs] = useState({})
   const [isDashboardActive, setIsDashboardActive] = useState(false)
+  const [logoImage, setLogoImage] = useState(null)
+  const [logoPreview, setLogoPreview] = useState('')
   const debounceTimer = useRef(null)
   const canvasRef = useRef(null)
+  const fileInputRef = useRef(null)
 
   // Mouse tracking for flashlight effect
   const handleMouseMove = (e) => {
@@ -50,6 +53,68 @@ const BrandQRLanding = () => {
     return 'text'
   }
 
+  const handleLogoUpload = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    if (!file.type.startsWith('image/')) {
+      alert('Please upload an image file')
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const img = new Image()
+      img.onload = () => {
+        setLogoImage(img)
+        setLogoPreview(event.target.result)
+      }
+      img.src = event.target.result
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const removeLogo = () => {
+    setLogoImage(null)
+    setLogoPreview('')
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
+
+  const embedLogoOnQR = async (qrDataURL, logoImg) => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+
+      const qrImg = new Image()
+      qrImg.onload = () => {
+        canvas.width = qrImg.width
+        canvas.height = qrImg.height
+
+        ctx.drawImage(qrImg, 0, 0)
+
+        const logoSize = Math.floor(qrImg.width * 0.25)
+        const logoX = (canvas.width - logoSize) / 2
+        const logoY = (canvas.height - logoSize) / 2
+
+        const padding = 8
+        ctx.fillStyle = '#FFFFFF'
+        ctx.fillRect(
+          logoX - padding,
+          logoY - padding,
+          logoSize + padding * 2,
+          logoSize + padding * 2
+        )
+
+        ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize)
+
+        resolve(canvas.toDataURL('image/png'))
+      }
+      qrImg.src = qrDataURL
+    })
+  }
+
   const generateQRCode = async (text, color = qrColor) => {
     if (!text.trim()) {
       setQrCodeDataURL('')
@@ -57,7 +122,7 @@ const BrandQRLanding = () => {
     }
 
     try {
-      const dataURL = await QRCode.toDataURL(text, {
+      let dataURL = await QRCode.toDataURL(text, {
         width: 400,
         margin: 2,
         color: {
@@ -65,6 +130,11 @@ const BrandQRLanding = () => {
           light: '#00000000'
         }
       })
+
+      if (logoImage) {
+        dataURL = await embedLogoOnQR(dataURL, logoImage)
+      }
+
       setQrCodeDataURL(dataURL)
     } catch (err) {
       console.error('QR generation error:', err)
@@ -87,7 +157,7 @@ const BrandQRLanding = () => {
         clearTimeout(debounceTimer.current)
       }
     }
-  }, [inputValue, qrColor])
+  }, [inputValue, qrColor, logoImage])
 
   const downloadQRCode = (format) => {
     if (!qrCodeDataURL) return
@@ -298,6 +368,36 @@ const BrandQRLanding = () => {
                       title="Green"
                     ></button>
                   </div>
+                </div>
+
+                <div className="brandqr__logo-section">
+                  <label className="brandqr__color-label">Logo (Optional):</label>
+                  {!logoPreview ? (
+                    <div className="brandqr__logo-upload">
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleLogoUpload}
+                        className="brandqr__file-input"
+                        id="logo-upload-brand"
+                      />
+                      <label htmlFor="logo-upload-brand" className="brandqr__file-label">
+                        <span>📷 Upload Logo</span>
+                      </label>
+                    </div>
+                  ) : (
+                    <div className="brandqr__logo-preview">
+                      <img src={logoPreview} alt="Logo preview" className="brandqr__logo-image" />
+                      <button
+                        type="button"
+                        onClick={removeLogo}
+                        className="brandqr__remove-logo"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 <div className={`brandqr__qr-results ${qrCodeDataURL ? 'brandqr__qr-results--visible' : ''}`}>
