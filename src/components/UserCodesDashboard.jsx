@@ -1,4 +1,5 @@
 import './UserCodesDashboard.css'
+import QRCode from 'qrcode'
 
 const UserCodesDashboard = ({ qrCodes, onEdit, onDownload, onDelete }) => {
 
@@ -40,6 +41,34 @@ const UserCodesDashboard = ({ qrCodes, onEdit, onDownload, onDelete }) => {
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
+  }
+
+  const handleDownloadSVG = async (qr) => {
+    if (!qr.qr_content) return
+
+    try {
+      const svg = await QRCode.toString(qr.qr_content, {
+        type: 'svg',
+        width: 400,
+        margin: 2,
+        color: {
+          dark: qr.qr_color || '#000000',
+          light: '#ffffff'
+        }
+      })
+      
+      const blob = new Blob([svg], { type: 'image/svg+xml' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `${qr.title.replace(/[^a-z0-9]/gi, '_')}.svg`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error('Failed to generate SVG:', err)
+    }
   }
 
   return (
@@ -134,17 +163,30 @@ const UserCodesDashboard = ({ qrCodes, onEdit, onDownload, onDelete }) => {
                       )}
 
                       <div className="code-card__actions-row">
-                        <button
-                          className="code-card__action-button code-card__action-button--download"
-                          onClick={() => handleDownloadPNG(qr)}
-                          aria-label="Download QR Code"
-                        >
-                          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 15L12 3M12 15L8 11M12 15L16 11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                            <path d="M3 15L3 18C3 19.6569 4.34315 21 6 21L18 21C19.6569 21 21 19.6569 21 18L21 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                          </svg>
-                          Download
-                        </button>
+                        <div className="code-card__download-group">
+                          <button
+                            className="code-card__action-button code-card__action-button--download-png"
+                            onClick={() => handleDownloadPNG(qr)}
+                            aria-label="Download PNG"
+                          >
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M12 15L12 3M12 15L8 11M12 15L16 11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M3 15L3 18C3 19.6569 4.34315 21 6 21L18 21C19.6569 21 21 19.6569 21 18L21 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                            </svg>
+                            PNG
+                          </button>
+                          <button
+                            className="code-card__action-button code-card__action-button--download-svg"
+                            onClick={() => handleDownloadSVG(qr)}
+                            aria-label="Download SVG"
+                          >
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M12 15L12 3M12 15L8 11M12 15L16 11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M3 15L3 18C3 19.6569 4.34315 21 6 21L18 21C19.6569 21 21 19.6569 21 18L21 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                            </svg>
+                            SVG
+                          </button>
+                        </div>
                         <button
                           className="code-card__action-button code-card__action-button--delete"
                           onClick={() => onDelete(qr.id)}
