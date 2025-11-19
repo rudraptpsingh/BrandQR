@@ -1,8 +1,13 @@
 import { useState, useEffect, useRef } from 'react'
 import QRCode from 'qrcode'
+import { useAuth } from '../contexts/AuthContext'
+import AuthModal from './AuthModal'
 import './BrandQRLanding.css'
 
 const BrandQRLanding = () => {
+  const { user, signOut } = useAuth()
+  const [authModalOpen, setAuthModalOpen] = useState(false)
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [inputValue, setInputValue] = useState('')
   const [qrCodeDataURL, setQrCodeDataURL] = useState('')
   const [detectedType, setDetectedType] = useState('text')
@@ -188,7 +193,37 @@ BrandQR.generate("https://brandqr.com")
             <a href="#home">Home</a>
             <a href="#features">Features</a>
             <a href="#pricing">Pricing</a>
-            <button className="brandqr__nav-cta">Sign In</button>
+            {user ? (
+              <div className="brandqr__user-menu">
+                <button
+                  className="brandqr__user-button"
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                >
+                  {user.email.charAt(0).toUpperCase()}
+                </button>
+                {userMenuOpen && (
+                  <div className="brandqr__user-dropdown">
+                    <div className="brandqr__user-email">{user.email}</div>
+                    <button
+                      className="brandqr__sign-out"
+                      onClick={() => {
+                        signOut()
+                        setUserMenuOpen(false)
+                      }}
+                    >
+                      Sign Out
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <button
+                className="brandqr__nav-cta"
+                onClick={() => setAuthModalOpen(true)}
+              >
+                Sign In
+              </button>
+            )}
           </div>
         </div>
       </nav>
@@ -463,6 +498,11 @@ BrandQR.generate("https://brandqr.com")
           </div>
         </div>
       </footer>
+
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+      />
     </div>
   )
 }
