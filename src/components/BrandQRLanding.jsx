@@ -537,9 +537,6 @@ const BrandQRLanding = () => {
             <span>BrandQR</span>
           </div>
           <div className="brandqr__nav-links">
-            <a href="#home">Home</a>
-            <a href="#features">Features</a>
-            <a href="#pricing">Pricing</a>
             {user ? (
               <div className="brandqr__user-menu">
                 <button
