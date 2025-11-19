@@ -37,6 +37,10 @@ const PlatformLanding = () => {
         if (platformError) throw platformError
 
         setPlatforms(platformLinks || [])
+
+        await supabase.rpc('increment_scan_count', { qr_code_id: qrCode.id }).catch(err => {
+          console.error('Failed to increment scan count:', err)
+        })
       } catch (err) {
         setError('Failed to load platform links')
         console.error(err)

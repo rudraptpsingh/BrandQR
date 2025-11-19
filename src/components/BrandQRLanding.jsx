@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import AuthModal from './AuthModal'
 import Notification from './Notification'
+import UserCodesDashboard from './UserCodesDashboard'
 import './BrandQRLanding.css'
 
 const BrandQRLanding = () => {
@@ -698,7 +699,25 @@ const BrandQRLanding = () => {
         </div>
       </section>
 
-      <section className="brandqr__features">
+      {user ? (
+        <UserCodesDashboard
+          qrCodes={savedQRCodes}
+          onEdit={(qr) => {
+            setNotification({ type: 'info', message: 'Edit functionality coming soon!' })
+          }}
+          onDownload={(qr) => {
+            const link = document.createElement('a')
+            link.href = qr.qr_image_data
+            link.download = `${qr.title.replace(/[^a-z0-9]/gi, '_')}.png`
+            document.body.appendChild(link)
+            link.click()
+            document.body.removeChild(link)
+          }}
+          onDelete={deleteQRCode}
+        />
+      ) : (
+        <>
+          <section className="brandqr__features">
         <div className="brandqr__features-container">
           <h2 className="brandqr__section-title">Powerful Features</h2>
 
@@ -847,6 +866,8 @@ const BrandQRLanding = () => {
           </div>
         </div>
       </section>
+        </>
+      )}
 
       <footer className="brandqr__footer">
         <div className="brandqr__footer-content">
