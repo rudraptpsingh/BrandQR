@@ -189,7 +189,7 @@ const BrandQRLanding = () => {
     }
   }, [inputValue, qrColor, logoImage])
 
-  const downloadQRCode = (format) => {
+  const downloadQRCode = async (format) => {
     if (!qrCodeDataURL) return
 
     if (format === 'png') {
@@ -200,16 +200,122 @@ const BrandQRLanding = () => {
       link.click()
       document.body.removeChild(link)
     } else if (format === 'svg') {
-      QRCode.toString(inputValue, {
-        type: 'svg',
-        width: 400,
-        margin: 2,
-        color: {
-          dark: qrColor,
-          light: '#ffffff'
+      try {
+        let svgString = await QRCode.toString(inputValue, {
+          type: 'svg',
+          width: 400,
+          margin: 2,
+          errorCorrectionLevel: 'H',
+          color: {
+            dark: qrColor,
+            light: '#ffffff'
+          }
+        })
+
+        if (logoImage && logoPreview) {
+          const parser = new DOMParser()
+          const svgDoc = parser.parseFromString(svgString, 'image/svg+xml')
+          const svgElement = svgDoc.documentElement
+
+          const viewBox = svgElement.getAttribute('viewBox').split(' ')
+          const svgWidth = parseFloat(viewBox[2])
+          const svgHeight = parseFloat(viewBox[3])
+          const centerX = svgWidth / 2
+          const centerY = svgHeight / 2
+
+          const clearZoneSize = svgWidth * 0.22
+          const logoSize = clearZoneSize * 0.75
+
+          const defsElement = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'defs')
+
+          const filter = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'filter')
+          filter.setAttribute('id', 'shadow')
+          filter.setAttribute('x', '-50%')
+          filter.setAttribute('y', '-50%')
+          filter.setAttribute('width', '200%')
+          filter.setAttribute('height', '200%')
+
+          const feGaussianBlur = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'feGaussianBlur')
+          feGaussianBlur.setAttribute('in', 'SourceAlpha')
+          feGaussianBlur.setAttribute('stdDeviation', '2')
+
+          const feOffset = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'feOffset')
+          feOffset.setAttribute('dx', '0')
+          feOffset.setAttribute('dy', '1')
+          feOffset.setAttribute('result', 'offsetblur')
+
+          const feComponentTransfer = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'feComponentTransfer')
+          const feFuncA = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'feFuncA')
+          feFuncA.setAttribute('type', 'linear')
+          feFuncA.setAttribute('slope', '0.15')
+          feComponentTransfer.appendChild(feFuncA)
+
+          const feMerge = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'feMerge')
+          const feMergeNode1 = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'feMergeNode')
+          const feMergeNode2 = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'feMergeNode')
+          feMergeNode2.setAttribute('in', 'SourceGraphic')
+          feMerge.appendChild(feMergeNode1)
+          feMerge.appendChild(feMergeNode2)
+
+          filter.appendChild(feGaussianBlur)
+          filter.appendChild(feOffset)
+          filter.appendChild(feComponentTransfer)
+          filter.appendChild(feMerge)
+          defsElement.appendChild(filter)
+
+          const clipPath = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'clipPath')
+          clipPath.setAttribute('id', 'logoClip')
+          const clipCircle = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'circle')
+          clipCircle.setAttribute('cx', centerX.toString())
+          clipCircle.setAttribute('cy', centerY.toString())
+          clipCircle.setAttribute('r', (logoSize / 2).toString())
+          clipPath.appendChild(clipCircle)
+          defsElement.appendChild(clipPath)
+
+          svgElement.insertBefore(defsElement, svgElement.firstChild)
+
+          const clearZone = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'circle')
+          clearZone.setAttribute('cx', centerX.toString())
+          clearZone.setAttribute('cy', centerY.toString())
+          clearZone.setAttribute('r', (clearZoneSize / 2).toString())
+          clearZone.setAttribute('fill', '#FFFFFF')
+          clearZone.setAttribute('filter', 'url(#shadow)')
+          svgElement.appendChild(clearZone)
+
+          const clearZoneBorder = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'circle')
+          clearZoneBorder.setAttribute('cx', centerX.toString())
+          clearZoneBorder.setAttribute('cy', centerY.toString())
+          clearZoneBorder.setAttribute('r', (clearZoneSize / 2 - 1).toString())
+          clearZoneBorder.setAttribute('fill', 'none')
+          clearZoneBorder.setAttribute('stroke', 'rgba(0, 0, 0, 0.08)')
+          clearZoneBorder.setAttribute('stroke-width', '1.5')
+          svgElement.appendChild(clearZoneBorder)
+
+          const logoGroup = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'g')
+          logoGroup.setAttribute('clip-path', 'url(#logoClip)')
+
+          const logoImageElement = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'image')
+          logoImageElement.setAttribute('href', logoPreview)
+          logoImageElement.setAttribute('x', (centerX - logoSize / 2).toString())
+          logoImageElement.setAttribute('y', (centerY - logoSize / 2).toString())
+          logoImageElement.setAttribute('width', logoSize.toString())
+          logoImageElement.setAttribute('height', logoSize.toString())
+          logoGroup.appendChild(logoImageElement)
+          svgElement.appendChild(logoGroup)
+
+          const logoBorder = svgDoc.createElementNS('http://www.w3.org/2000/svg', 'circle')
+          logoBorder.setAttribute('cx', centerX.toString())
+          logoBorder.setAttribute('cy', centerY.toString())
+          logoBorder.setAttribute('r', (logoSize / 2 + 1).toString())
+          logoBorder.setAttribute('fill', 'none')
+          logoBorder.setAttribute('stroke', 'rgba(255, 255, 255, 0.4)')
+          logoBorder.setAttribute('stroke-width', '2')
+          svgElement.appendChild(logoBorder)
+
+          svgString = new XMLSerializer().serializeToString(svgDoc)
         }
-      }).then(svg => {
-        const blob = new Blob([svg], { type: 'image/svg+xml' })
+
+        const blob = new Blob([svgString], { type: 'image/svg+xml' })
         const url = URL.createObjectURL(blob)
         const link = document.createElement('a')
         link.href = url
@@ -218,7 +324,9 @@ const BrandQRLanding = () => {
         link.click()
         document.body.removeChild(link)
         URL.revokeObjectURL(url)
-      })
+      } catch (err) {
+        console.error('SVG generation error:', err)
+      }
     }
   }
 
