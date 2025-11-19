@@ -94,20 +94,36 @@ const BrandQRLanding = () => {
 
         ctx.drawImage(qrImg, 0, 0)
 
-        const logoSize = Math.floor(qrImg.width * 0.25)
+        const logoSize = Math.floor(qrImg.width * 0.15)
         const logoX = (canvas.width - logoSize) / 2
         const logoY = (canvas.height - logoSize) / 2
 
-        const padding = 8
-        ctx.fillStyle = '#FFFFFF'
-        ctx.fillRect(
-          logoX - padding,
-          logoY - padding,
-          logoSize + padding * 2,
-          logoSize + padding * 2
-        )
+        const padding = Math.floor(logoSize * 0.15)
+        const bgSize = logoSize + padding * 2
 
+        ctx.fillStyle = '#FFFFFF'
+        ctx.beginPath()
+        ctx.arc(
+          canvas.width / 2,
+          canvas.height / 2,
+          bgSize / 2,
+          0,
+          Math.PI * 2
+        )
+        ctx.fill()
+
+        ctx.save()
+        ctx.beginPath()
+        ctx.arc(
+          canvas.width / 2,
+          canvas.height / 2,
+          logoSize / 2,
+          0,
+          Math.PI * 2
+        )
+        ctx.clip()
         ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize)
+        ctx.restore()
 
         resolve(canvas.toDataURL('image/png'))
       }
@@ -125,6 +141,7 @@ const BrandQRLanding = () => {
       let dataURL = await QRCode.toDataURL(text, {
         width: 400,
         margin: 2,
+        errorCorrectionLevel: 'H',
         color: {
           dark: color,
           light: '#00000000'
