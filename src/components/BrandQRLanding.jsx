@@ -3,6 +3,7 @@ import QRCode from 'qrcode'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import AuthModal from './AuthModal'
+import DownloadGateModal from './DownloadGateModal'
 import Notification from './Notification'
 import UserCodesDashboard from './UserCodesDashboard'
 import './BrandQRLanding.css'
@@ -25,6 +26,8 @@ const BrandQRLanding = () => {
   const [notification, setNotification] = useState(null)
   const [isSaving, setIsSaving] = useState(false)
   const [currentQRSaved, setCurrentQRSaved] = useState(false)
+  const [downloadGateOpen, setDownloadGateOpen] = useState(false)
+  const [pendingDownload, setPendingDownload] = useState(null)
   const debounceTimer = useRef(null)
   const canvasRef = useRef(null)
   const fileInputRef = useRef(null)
@@ -261,6 +264,20 @@ const BrandQRLanding = () => {
     }
   }
 
+  const handleDownloadGateClose = () => {
+    setDownloadGateOpen(false)
+    if (pendingDownload) {
+      proceedWithDownload(pendingDownload)
+      setPendingDownload(null)
+    }
+  }
+
+  const handleDownloadGateSignUp = () => {
+    setDownloadGateOpen(false)
+    setAuthModalOpen(true)
+    setPendingDownload(null)
+  }
+
   const deleteQRCode = async (qrId) => {
     if (!user) return
 
@@ -305,6 +322,20 @@ const BrandQRLanding = () => {
   }, [inputValue, qrColor, logoImage])
 
   const downloadQRCode = async (format) => {
+    if (!qrCodeDataURL) return
+
+    // If user is not logged in, show download gate modal
+    if (!user) {
+      setPendingDownload(format)
+      setDownloadGateOpen(true)
+      return
+    }
+
+    // Proceed with download
+    proceedWithDownload(format)
+  }
+
+  const proceedWithDownload = async (format) => {
     if (!qrCodeDataURL) return
 
     if (format === 'png') {
@@ -899,6 +930,13 @@ const BrandQRLanding = () => {
       <AuthModal
         isOpen={authModalOpen}
         onClose={() => setAuthModalOpen(false)}
+      />
+
+      <DownloadGateModal
+        isOpen={downloadGateOpen}
+        onClose={handleDownloadGateClose}
+        onProceedDownload={handleDownloadGateClose}
+        onSignUp={handleDownloadGateSignUp}
       />
 
       {notification && (

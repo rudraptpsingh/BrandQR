@@ -5,17 +5,17 @@ const UserCodesDashboard = ({ qrCodes, onEdit, onDownload, onDelete }) => {
 
   const getTypeLabel = (type) => {
     const types = {
-      'single-url': 'Static',
-      'text': 'Static',
-      'wifi': 'Static',
-      'url': 'Static',
-      'multi-platform': 'Dynamic',
-      'email': 'Static',
-      'sms': 'Static',
-      'geolocation': 'Static',
-      'vcard': 'Static'
+      'single-url': 'Basic',
+      'text': 'Basic',
+      'wifi': 'Basic',
+      'url': 'Basic',
+      'multi-platform': 'Smart Code',
+      'email': 'Basic',
+      'sms': 'Basic',
+      'geolocation': 'Basic',
+      'vcard': 'Basic'
     }
-    return types[type] || 'Static'
+    return types[type] || 'Basic'
   }
 
   const getTimeAgo = (dateString) => {
@@ -85,8 +85,8 @@ const UserCodesDashboard = ({ qrCodes, onEdit, onDownload, onDelete }) => {
               <span className="user-dashboard__stat-label">Total Codes</span>
             </div>
             <div className="user-dashboard__stat">
-              <span className="user-dashboard__stat-value">{qrCodes.filter(qr => getTypeLabel(qr.qr_type) === 'Dynamic').length}</span>
-              <span className="user-dashboard__stat-label">Dynamic</span>
+              <span className="user-dashboard__stat-value">{qrCodes.filter(qr => getTypeLabel(qr.qr_type) === 'Smart Code').length}</span>
+              <span className="user-dashboard__stat-label">Smart Codes</span>
             </div>
           </div>
         </div>
@@ -108,7 +108,7 @@ const UserCodesDashboard = ({ qrCodes, onEdit, onDownload, onDelete }) => {
           <div className="user-dashboard__grid">
             {qrCodes.map((qr) => {
               const typeLabel = getTypeLabel(qr.qr_type)
-              const isDynamic = typeLabel === 'Dynamic'
+              const isSmartCode = typeLabel === 'Smart Code'
 
               return (
                 <div key={qr.id} className="code-card">
@@ -132,7 +132,7 @@ const UserCodesDashboard = ({ qrCodes, onEdit, onDownload, onDelete }) => {
                   <div className="code-card__content">
                     <div className="code-card__title-row">
                       <h3 className="code-card__title">{qr.title}</h3>
-                      <span className={`code-card__badge code-card__badge--${isDynamic ? 'dynamic' : 'static'}`}>
+                      <span className={`code-card__badge code-card__badge--${isSmartCode ? 'smart' : 'basic'}`}>
                         {typeLabel}
                       </span>
                     </div>
@@ -151,7 +151,7 @@ const UserCodesDashboard = ({ qrCodes, onEdit, onDownload, onDelete }) => {
                     )}
 
                     <div className="code-card__footer">
-                      {isDynamic && (
+                      {isSmartCode && (
                         <div className="code-card__scans">
                           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M2 12C2 12 5 5 12 5C19 5 22 12 22 12C22 12 19 19 12 19C5 19 2 12 2 12Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
