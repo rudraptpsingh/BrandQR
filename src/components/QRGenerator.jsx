@@ -264,15 +264,38 @@ const QRGenerator = () => {
     }
   }
 
-  const downloadQRCode = () => {
+  const downloadQRCode = (format) => {
     if (!qrCodeDataURL) return
 
-    const link = document.createElement('a')
-    link.href = qrCodeDataURL
-    link.download = 'qrcode.png'
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+    if (format === 'png') {
+      const link = document.createElement('a')
+      link.href = qrCodeDataURL
+      link.download = 'brandqr-code.png'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    } else if (format === 'svg') {
+      const qrContent = landingPageUrl || singleUrl
+      QRCode.toString(qrContent, {
+        type: 'svg',
+        width: 400,
+        margin: 2,
+        color: {
+          dark: '#000000',
+          light: '#ffffff'
+        }
+      }).then(svg => {
+        const blob = new Blob([svg], { type: 'image/svg+xml' })
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = 'brandqr-code.svg'
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        URL.revokeObjectURL(url)
+      })
+    }
   }
 
   const saveQRCodeToDatabase = async () => {
@@ -571,13 +594,22 @@ const QRGenerator = () => {
             </div>
 
             <div className="qr-generator__actions">
-              <button
-                className="qr-generator__button qr-generator__button--secondary"
-                onClick={downloadQRCode}
-                aria-label="Download QR Code"
-              >
-                Download QR Code
-              </button>
+              <div className="qr-generator__download-group">
+                <button
+                  className="qr-generator__button qr-generator__button--download-png"
+                  onClick={() => downloadQRCode('png')}
+                  aria-label="Download PNG"
+                >
+                  Download PNG
+                </button>
+                <button
+                  className="qr-generator__button qr-generator__button--download-svg"
+                  onClick={() => downloadQRCode('svg')}
+                  aria-label="Download SVG"
+                >
+                  Download SVG
+                </button>
+              </div>
               <button
                 className={`qr-generator__button ${currentQRSaved ? 'qr-generator__button--saved' : 'qr-generator__button--save'}`}
                 onClick={saveQRCodeToDatabase}
