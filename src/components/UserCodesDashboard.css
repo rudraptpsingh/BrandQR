@@ -185,96 +185,77 @@
   height: 60%;
 }
 
-.code-card__actions {
-  position: relative;
+.code-card__qr-content {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
 }
 
-.code-card__menu-button {
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  color: rgba(255, 255, 255, 0.7);
-  cursor: pointer;
+.code-card__qr-content-label {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 0.5rem 0;
+  font-weight: 600;
+}
+
+.code-card__qr-content-text {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+  word-break: break-word;
+  line-height: 1.5;
+}
+
+.code-card__actions-row {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.code-card__action-button {
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
-}
-
-.code-card__menu-button:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #ffffff;
-}
-
-.code-card__menu-button svg {
-  width: 16px;
-  height: 16px;
-}
-
-.code-card__menu {
-  position: absolute;
-  top: calc(100% + 0.5rem);
-  right: 0;
-  min-width: 200px;
-  background: rgba(20, 20, 24, 0.98);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 12px;
-  padding: 0.5rem;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-  z-index: 100;
-  animation: menuSlideIn 0.2s ease-out;
-}
-
-@keyframes menuSlideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.code-card__menu-item {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
   padding: 0.75rem 1rem;
-  background: none;
-  border: none;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   color: rgba(255, 255, 255, 0.9);
   font-size: 0.875rem;
   font-weight: 500;
-  text-align: left;
   cursor: pointer;
   transition: all 0.2s;
   font-family: inherit;
 }
 
-.code-card__menu-item:hover {
-  background: rgba(255, 255, 255, 0.08);
+.code-card__action-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.15);
   color: #ffffff;
+  transform: translateY(-1px);
 }
 
-.code-card__menu-item svg {
+.code-card__action-button svg {
   width: 16px;
   height: 16px;
   flex-shrink: 0;
 }
 
-.code-card__menu-item--danger {
-  color: rgba(239, 68, 68, 0.9);
+.code-card__action-button--download:hover {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: rgba(59, 130, 246, 0.3);
+  color: #3b82f6;
 }
 
-.code-card__menu-item--danger:hover {
+.code-card__action-button--delete:hover {
   background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.3);
   color: #ef4444;
 }
 
@@ -365,19 +346,6 @@
   color: rgba(255, 255, 255, 0.5);
 }
 
-.code-card__status {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: rgba(16, 185, 129, 0.9);
-  font-size: 0.875rem;
-  font-weight: 500;
-}
-
-.code-card__status svg {
-  width: 16px;
-  height: 16px;
-}
 
 @media (max-width: 1024px) {
   .user-dashboard__grid {
