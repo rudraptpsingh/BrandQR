@@ -247,7 +247,7 @@ BrandQR.generate(WiFi:S:MiFi;T:S:MyCafe;T:WPA;P:guest22))
           <h2 className="brandqr__section-title">Powerful Features</h2>
 
           <div className="brandqr__bento-grid">
-            <div className="brandqr__feature-card brandqr__feature-card--large">
+            <div className="brandqr__feature-card">
               <div className="brandqr__feature-content">
                 <div className="brandqr__feature-icon-group">
                   <span className="brandqr__feature-icon">🌐</span>
