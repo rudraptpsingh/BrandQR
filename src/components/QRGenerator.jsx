@@ -2,6 +2,8 @@ import { useState, useRef } from 'react'
 import QRCode from 'qrcode'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import AuthModal from './AuthModal'
+import Notification from './Notification'
 import './QRGenerator.css'
 
 const QRGenerator = () => {
@@ -17,6 +19,10 @@ const QRGenerator = () => {
   const [isGenerating, setIsGenerating] = useState(false)
   const [logoImage, setLogoImage] = useState(null)
   const [logoPreview, setLogoPreview] = useState('')
+  const [authModalOpen, setAuthModalOpen] = useState(false)
+  const [notification, setNotification] = useState(null)
+  const [isSaving, setIsSaving] = useState(false)
+  const [currentQRSaved, setCurrentQRSaved] = useState(false)
   const canvasRef = useRef(null)
   const fileInputRef = useRef(null)
 
@@ -159,30 +165,7 @@ const QRGenerator = () => {
         }
 
         setQrCodeDataURL(dataURL)
-
-        if (user) {
-          try {
-            const slug = generateSlug()
-            const { error: dbError } = await supabase
-              .from('qr_codes')
-              .insert([{
-                user_id: user.id,
-                slug,
-                title: title.trim() || 'Single URL QR Code',
-                qr_type: 'single-url',
-                qr_content: fullUrl,
-                qr_image_data: dataURL,
-                logo_data: logoPreview || '',
-                qr_color: '#000000'
-              }])
-
-            if (dbError) {
-              console.error('Failed to save QR code to database:', dbError)
-            }
-          } catch (dbErr) {
-            console.error('Database save error:', dbErr)
-          }
-        }
+        setCurrentQRSaved(false)
       } catch (err) {
         setError('Failed to generate QR code. Please try again.')
         console.error(err)
@@ -271,25 +254,7 @@ const QRGenerator = () => {
         }
 
         setQrCodeDataURL(dataURL)
-
-        if (user) {
-          try {
-            const { error: updateError } = await supabase
-              .from('qr_codes')
-              .update({
-                qr_image_data: dataURL,
-                logo_data: logoPreview || '',
-                qr_color: '#000000'
-              })
-              .eq('id', qrCodeData.id)
-
-            if (updateError) {
-              console.error('Failed to update QR code image:', updateError)
-            }
-          } catch (updateErr) {
-            console.error('QR code image update error:', updateErr)
-          }
-        }
+        setCurrentQRSaved(false)
       } catch (err) {
         setError('Failed to generate QR code. Please try again.')
         console.error(err)
@@ -310,6 +275,75 @@ const QRGenerator = () => {
     document.body.removeChild(link)
   }
 
+  const saveQRCodeToDatabase = async () => {
+    if (!user) {
+      setAuthModalOpen(true)
+      setNotification({ type: 'info', message: 'Please sign in to save your QR code' })
+      return
+    }
+
+    if (currentQRSaved) {
+      setNotification({ type: 'info', message: 'This QR code is already saved' })
+      return
+    }
+
+    try {
+      const { data: existingQRs, error: countError } = await supabase
+        .from('qr_codes')
+        .select('id', { count: 'exact' })
+        .eq('user_id', user.id)
+
+      if (countError) throw countError
+
+      if (existingQRs && existingQRs.length >= 10) {
+        setNotification({ type: 'error', message: 'You have reached the maximum limit of 10 saved QR codes. Please delete some to save new ones.' })
+        return
+      }
+
+      setIsSaving(true)
+
+      const slug = generateSlug()
+      let qrTitle = ''
+      let qrContent = ''
+
+      if (qrType === 'single') {
+        const contentPreview = singleUrl.length > 30 ? singleUrl.substring(0, 30) + '...' : singleUrl
+        qrTitle = title.trim() || `URL: ${contentPreview}`
+        qrContent = singleUrl
+      } else {
+        const platforms = []
+        if (websiteUrl) platforms.push(websiteUrl)
+        if (instagramHandle) platforms.push(`@${instagramHandle}`)
+        const contentPreview = platforms.join(', ')
+        qrTitle = title.trim() || `Multi-Platform: ${contentPreview.length > 30 ? contentPreview.substring(0, 30) + '...' : contentPreview}`
+        qrContent = landingPageUrl
+      }
+
+      const { error: dbError } = await supabase
+        .from('qr_codes')
+        .insert([{
+          user_id: user.id,
+          slug,
+          title: qrTitle,
+          qr_type: qrType === 'single' ? 'single-url' : 'multi-platform',
+          qr_content: qrContent,
+          qr_image_data: qrCodeDataURL,
+          logo_data: logoPreview || '',
+          qr_color: '#000000'
+        }])
+
+      if (dbError) throw dbError
+
+      setCurrentQRSaved(true)
+      setNotification({ type: 'success', message: 'QR code saved successfully!' })
+    } catch (dbErr) {
+      console.error('Database save error:', dbErr)
+      setNotification({ type: 'error', message: 'Failed to save QR code. Please try again.' })
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   const resetForm = () => {
     setSingleUrl('')
     setTitle('')
@@ -318,6 +352,7 @@ const QRGenerator = () => {
     setQrCodeDataURL('')
     setLandingPageUrl('')
     setError('')
+    setCurrentQRSaved(false)
     removeLogo()
   }
 
@@ -544,6 +579,14 @@ const QRGenerator = () => {
                 Download QR Code
               </button>
               <button
+                className={`qr-generator__button ${currentQRSaved ? 'qr-generator__button--saved' : 'qr-generator__button--save'}`}
+                onClick={saveQRCodeToDatabase}
+                disabled={isSaving || currentQRSaved}
+                aria-label="Save QR Code"
+              >
+                {isSaving ? 'Saving...' : currentQRSaved ? 'Saved ✓' : 'Save QR Code'}
+              </button>
+              <button
                 className="qr-generator__button qr-generator__button--primary"
                 onClick={resetForm}
                 aria-label="Create Another"
@@ -554,6 +597,19 @@ const QRGenerator = () => {
           </div>
         )}
       </div>
+
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+      />
+
+      {notification && (
+        <Notification
+          type={notification.type}
+          message={notification.message}
+          onClose={() => setNotification(null)}
+        />
+      )}
     </div>
   )
 }

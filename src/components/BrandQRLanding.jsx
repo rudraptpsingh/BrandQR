@@ -3,6 +3,7 @@ import QRCode from 'qrcode'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import AuthModal from './AuthModal'
+import Notification from './Notification'
 import './BrandQRLanding.css'
 
 const BrandQRLanding = () => {
@@ -20,6 +21,9 @@ const BrandQRLanding = () => {
   const [logoPreview, setLogoPreview] = useState('')
   const [savedQRCodes, setSavedQRCodes] = useState([])
   const [showSavedQRs, setShowSavedQRs] = useState(false)
+  const [notification, setNotification] = useState(null)
+  const [isSaving, setIsSaving] = useState(false)
+  const [currentQRSaved, setCurrentQRSaved] = useState(false)
   const debounceTimer = useRef(null)
   const canvasRef = useRef(null)
   const fileInputRef = useRef(null)
@@ -151,31 +155,60 @@ const BrandQRLanding = () => {
     return Math.random().toString(36).substring(2, 10) + Date.now().toString(36)
   }
 
-  const saveQRCodeToDatabase = async (text, dataURL, type, color) => {
-    if (!user) return
+  const saveQRCodeToDatabase = async () => {
+    if (!user) {
+      setAuthModalOpen(true)
+      setNotification({ type: 'info', message: 'Please sign in to save your QR code' })
+      return
+    }
+
+    if (currentQRSaved) {
+      setNotification({ type: 'info', message: 'This QR code is already saved' })
+      return
+    }
 
     try {
+      const { data: existingQRs, error: countError } = await supabase
+        .from('qr_codes')
+        .select('id', { count: 'exact' })
+        .eq('user_id', user.id)
+
+      if (countError) throw countError
+
+      if (existingQRs && existingQRs.length >= 10) {
+        setNotification({ type: 'error', message: 'You have reached the maximum limit of 10 saved QR codes. Please delete some to save new ones.' })
+        return
+      }
+
+      setIsSaving(true)
+
       const slug = generateSlug()
+      const contentPreview = inputValue.length > 30 ? inputValue.substring(0, 30) + '...' : inputValue
+      const title = `${detectedType.toUpperCase()}: ${contentPreview}`
+
       const { error: dbError } = await supabase
         .from('qr_codes')
         .insert([{
           user_id: user.id,
           slug,
-          title: `${type.toUpperCase()} QR Code`,
-          qr_type: type,
-          qr_content: text,
-          qr_image_data: dataURL,
+          title,
+          qr_type: detectedType,
+          qr_content: inputValue,
+          qr_image_data: qrCodeDataURL,
           logo_data: logoPreview || '',
-          qr_color: color
+          qr_color: qrColor
         }])
 
-      if (dbError) {
-        console.error('Failed to save QR code to database:', dbError)
-      } else {
-        await fetchSavedQRCodes()
-      }
+      if (dbError) throw dbError
+
+      setCurrentQRSaved(true)
+      setNotification({ type: 'success', message: 'QR code saved successfully!' })
+      await fetchSavedQRCodes()
     } catch (dbErr) {
       console.error('Database save error:', dbErr)
+      setNotification({ type: 'error', message: 'Failed to save QR code. Please try again.' })
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -201,8 +234,7 @@ const BrandQRLanding = () => {
       }
 
       setQrCodeDataURL(dataURL)
-
-      await saveQRCodeToDatabase(text, dataURL, detectedType, color)
+      setCurrentQRSaved(false)
     } catch (err) {
       console.error('QR generation error:', err)
     }
@@ -228,6 +260,26 @@ const BrandQRLanding = () => {
     }
   }
 
+  const deleteQRCode = async (qrId) => {
+    if (!user) return
+
+    try {
+      const { error } = await supabase
+        .from('qr_codes')
+        .delete()
+        .eq('id', qrId)
+        .eq('user_id', user.id)
+
+      if (error) throw error
+
+      setNotification({ type: 'success', message: 'QR code deleted successfully' })
+      await fetchSavedQRCodes()
+    } catch (err) {
+      console.error('Failed to delete QR code:', err)
+      setNotification({ type: 'error', message: 'Failed to delete QR code. Please try again.' })
+    }
+  }
+
   useEffect(() => {
     fetchSavedQRCodes()
   }, [user])
@@ -241,6 +293,7 @@ const BrandQRLanding = () => {
       const type = detectContentType(inputValue)
       setDetectedType(type)
       generateQRCode(inputValue)
+      setCurrentQRSaved(false)
     }, 300)
 
     return () => {
@@ -628,6 +681,13 @@ const BrandQRLanding = () => {
                         >
                           Download SVG
                         </button>
+                        <button
+                          className={`brandqr__download-btn brandqr__download-btn--save ${currentQRSaved ? 'brandqr__download-btn--saved' : ''}`}
+                          onClick={saveQRCodeToDatabase}
+                          disabled={isSaving || currentQRSaved}
+                        >
+                          {isSaving ? 'Saving...' : currentQRSaved ? 'Saved ✓' : 'Save QR Code'}
+                        </button>
                       </div>
                     </>
                   )}
@@ -820,6 +880,14 @@ const BrandQRLanding = () => {
         onClose={() => setAuthModalOpen(false)}
       />
 
+      {notification && (
+        <Notification
+          type={notification.type}
+          message={notification.message}
+          onClose={() => setNotification(null)}
+        />
+      )}
+
       {showSavedQRs && (
         <div className="brandqr__saved-modal" onClick={() => setShowSavedQRs(false)}>
           <div className="brandqr__saved-content" onClick={(e) => e.stopPropagation()}>
@@ -845,13 +913,22 @@ const BrandQRLanding = () => {
                         {new Date(qr.created_at).toLocaleDateString()}
                       </p>
                     </div>
-                    <a
-                      href={qr.qr_image_data}
-                      download={`${qr.title}.png`}
-                      className="brandqr__download-button"
-                    >
-                      Download
-                    </a>
+                    <div className="brandqr__saved-actions">
+                      <a
+                        href={qr.qr_image_data}
+                        download={`${qr.title}.png`}
+                        className="brandqr__download-button"
+                      >
+                        Download
+                      </a>
+                      <button
+                        onClick={() => deleteQRCode(qr.id)}
+                        className="brandqr__delete-button"
+                        aria-label="Delete QR Code"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 ))
               )}
