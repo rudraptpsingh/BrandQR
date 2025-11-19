@@ -588,10 +588,10 @@ const BrandQRLanding = () => {
         <div className="brandqr__hero-content">
           <div className="brandqr__hero-text">
             <h1 className="brandqr__hero-title">
-              Automate the Impossible.
+              Create Trackable & Branded QR Codes Instantly.
             </h1>
             <p className="brandqr__hero-subtitle">
-              Instantly generate intelligent QR codes for anything.
+              Design beautiful, logo-embedded QR Codes in seconds. Unlock real-time scan analytics and change your link anytime.
             </p>
           </div>
 
