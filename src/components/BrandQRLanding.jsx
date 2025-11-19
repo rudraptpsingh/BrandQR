@@ -9,13 +9,20 @@ const BrandQRLanding = () => {
   const [qrColor, setQrColor] = useState('#000000')
   const [isTerminalVisible, setIsTerminalVisible] = useState(false)
   const [terminalText, setTerminalText] = useState('')
+  const [terminalQR, setTerminalQR] = useState('')
   const debounceTimer = useRef(null)
   const canvasRef = useRef(null)
 
-  const socialProofLogos = [
-    'NETFLIX', 'SPOTIFY', 'AIRBNB', 'UBER', 'STRIPE', 'SLACK',
-    'SHOPIFY', 'ZOOM', 'DISCORD', 'DROPBOX', 'FIGMA', 'NOTION'
-  ]
+  // Mouse tracking for flashlight effect
+  const handleMouseMove = (e) => {
+    const card = e.currentTarget
+    const rect = card.getBoundingClientRect()
+    const x = ((e.clientX - rect.left) / rect.width) * 100
+    const y = ((e.clientY - rect.top) / rect.height) * 100
+    card.style.setProperty('--mouse-x', `${x}%`)
+    card.style.setProperty('--mouse-y', `${y}%`)
+  }
+
 
   const detectContentType = (text) => {
     if (!text.trim()) return 'text'
@@ -111,9 +118,13 @@ const BrandQRLanding = () => {
   }
 
   useEffect(() => {
-    const terminalCode = `BrandQR.generate(WiFi:MyCPA;P:guest123))
-BrandQR.generate(WiFi:S:MiFi;T:S:MyCafe;T:WPA;P:guest22))
-  TestDenvese.itter TheIglse=8DD8))`
+    const terminalCode = `BrandQR.generate("WIFI:S:MyCafe;T:WPA;P:guest123;;")
+// Generating QR code...
+// ✓ QR code generated successfully!
+
+BrandQR.generate("https://brandqr.com")
+// Generating QR code...
+// ✓ QR code generated successfully!`
 
     let index = 0
     const typeInterval = setInterval(() => {
@@ -126,6 +137,27 @@ BrandQR.generate(WiFi:S:MiFi;T:S:MyCafe;T:WPA;P:guest22))
     }, 50)
 
     return () => clearInterval(typeInterval)
+  }, [])
+
+  // Generate demo QR code for terminal
+  useEffect(() => {
+    const generateTerminalQR = async () => {
+      try {
+        const dataURL = await QRCode.toDataURL('https://brandqr.com', {
+          width: 300,
+          margin: 2,
+          color: {
+            dark: '#8B5CF6',
+            light: '#ffffff'
+          }
+        })
+        setTerminalQR(dataURL)
+      } catch (err) {
+        console.error('Terminal QR generation error:', err)
+      }
+    }
+    
+    generateTerminalQR()
   }, [])
 
   const getTypeIcon = (type) => {
@@ -204,6 +236,42 @@ BrandQR.generate(WiFi:S:MiFi;T:S:MyCafe;T:WPA;P:guest22))
                   </div>
                 </div>
 
+                <div className="brandqr__color-options">
+                  <label className="brandqr__color-label">QR Color:</label>
+                  <div className="brandqr__color-presets">
+                    <button
+                      className={`brandqr__color-preset ${qrColor === '#000000' ? 'brandqr__color-preset--active' : ''}`}
+                      style={{ background: '#000000' }}
+                      onClick={() => setQrColor('#000000')}
+                      title="Black"
+                    ></button>
+                    <button
+                      className={`brandqr__color-preset ${qrColor === '#8B5CF6' ? 'brandqr__color-preset--active' : ''}`}
+                      style={{ background: '#8B5CF6' }}
+                      onClick={() => setQrColor('#8B5CF6')}
+                      title="Purple"
+                    ></button>
+                    <button
+                      className={`brandqr__color-preset ${qrColor === '#06B6D4' ? 'brandqr__color-preset--active' : ''}`}
+                      style={{ background: '#06B6D4' }}
+                      onClick={() => setQrColor('#06B6D4')}
+                      title="Cyan"
+                    ></button>
+                    <button
+                      className={`brandqr__color-preset ${qrColor === '#EC4899' ? 'brandqr__color-preset--active' : ''}`}
+                      style={{ background: '#EC4899' }}
+                      onClick={() => setQrColor('#EC4899')}
+                      title="Pink"
+                    ></button>
+                    <button
+                      className={`brandqr__color-preset ${qrColor === '#10B981' ? 'brandqr__color-preset--active' : ''}`}
+                      style={{ background: '#10B981' }}
+                      onClick={() => setQrColor('#10B981')}
+                      title="Green"
+                    ></button>
+                  </div>
+                </div>
+
                 {qrCodeDataURL && (
                   <div className="brandqr__qr-preview">
                     <img src={qrCodeDataURL} alt="QR Code Preview" className="brandqr__qr-image" />
@@ -232,30 +300,28 @@ BrandQR.generate(WiFi:S:MiFi;T:S:MyCafe;T:WPA;P:guest22))
         </div>
       </section>
 
-      <section className="brandqr__social-proof">
-        <div className="brandqr__ticker">
-          <div className="brandqr__ticker-track">
-            {[...socialProofLogos, ...socialProofLogos, ...socialProofLogos].map((logo, idx) => (
-              <div key={idx} className="brandqr__ticker-item">{logo}</div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       <section className="brandqr__features">
         <div className="brandqr__features-container">
           <h2 className="brandqr__section-title">Powerful Features</h2>
 
           <div className="brandqr__bento-grid">
-            <div className="brandqr__feature-card">
+            <div 
+              className="brandqr__feature-card brandqr__feature-card--tall"
+              onMouseMove={handleMouseMove}
+            >
               <div className="brandqr__feature-content">
-                <div className="brandqr__feature-icon-group">
-                  <span className="brandqr__feature-icon">🌐</span>
-                  <span className="brandqr__feature-icon">📶</span>
-                  <span className="brandqr__feature-icon">👤</span>
-                  <span className="brandqr__feature-icon">✉️</span>
-                  <span className="brandqr__feature-icon">💬</span>
-                  <span className="brandqr__feature-icon">📍</span>
+                <div className="brandqr__smart-detection-visual">
+                  <div className="brandqr__circuit-board">
+                    <div className="brandqr__circuit-node"></div>
+                    <div className="brandqr__circuit-node"></div>
+                    <div className="brandqr__circuit-node"></div>
+                    <div className="brandqr__circuit-node"></div>
+                    <div className="brandqr__circuit-node"></div>
+                    <div className="brandqr__circuit-line"></div>
+                    <div className="brandqr__circuit-line"></div>
+                    <div className="brandqr__circuit-line"></div>
+                    <div className="brandqr__circuit-line"></div>
+                  </div>
                 </div>
                 <h3 className="brandqr__feature-title">AI-Powered Smart Detection</h3>
                 <p className="brandqr__feature-desc">
@@ -264,13 +330,18 @@ BrandQR.generate(WiFi:S:MiFi;T:S:MyCafe;T:WPA;P:guest22))
               </div>
             </div>
 
-            <div className="brandqr__feature-card">
+            <div 
+              className="brandqr__feature-card brandqr__feature-card--short"
+              onMouseMove={handleMouseMove}
+            >
               <div className="brandqr__feature-content">
                 <div className="brandqr__customization-preview">
                   <div className="brandqr__color-picker-demo">
-                    <div className="brandqr__color-swatch" style={{ background: '#000' }}></div>
-                    <div className="brandqr__color-swatch" style={{ background: '#8B5CF6' }}></div>
-                    <div className="brandqr__color-swatch" style={{ background: '#06B6D4' }}></div>
+                    <div className="brandqr__demo-swatches">
+                      <div className="brandqr__color-swatch" style={{ background: '#000' }}></div>
+                      <div className="brandqr__color-swatch" style={{ background: '#8B5CF6' }}></div>
+                      <div className="brandqr__color-swatch" style={{ background: '#06B6D4' }}></div>
+                    </div>
                     <div className="brandqr__color-slider"></div>
                   </div>
                 </div>
@@ -281,12 +352,19 @@ BrandQR.generate(WiFi:S:MiFi;T:S:MyCafe;T:WPA;P:guest22))
               </div>
             </div>
 
-            <div className="brandqr__feature-card">
+            <div 
+              className="brandqr__feature-card brandqr__feature-card--short"
+              onMouseMove={handleMouseMove}
+            >
               <div className="brandqr__feature-content">
                 <div className="brandqr__instant-preview">
+                  <div className="brandqr__qr-forming">
+                    {[...Array(25)].map((_, i) => (
+                      <div key={i} className="brandqr__qr-pixel"></div>
+                    ))}
+                  </div>
                   <div className="brandqr__pulse-ring"></div>
                   <div className="brandqr__pulse-ring brandqr__pulse-ring--delayed"></div>
-                  <div className="brandqr__instant-icon">⚡</div>
                 </div>
                 <h3 className="brandqr__feature-title">Instant, No-Click Generation</h3>
                 <p className="brandqr__feature-desc">
@@ -295,10 +373,21 @@ BrandQR.generate(WiFi:S:MiFi;T:S:MyCafe;T:WPA;P:guest22))
               </div>
             </div>
 
-            <div className="brandqr__feature-card">
+            <div 
+              className="brandqr__feature-card brandqr__feature-card--tall"
+              onMouseMove={handleMouseMove}
+            >
               <div className="brandqr__feature-content">
                 <div className="brandqr__download-preview">
-                  <div className="brandqr__download-icon">⬇</div>
+                  <div className="brandqr__qr-detail">
+                    {[...Array(36)].map((_, i) => (
+                      <div key={i} className="brandqr__qr-detail-pixel"></div>
+                    ))}
+                    <div className="brandqr__qr-corner brandqr__qr-corner--tl"></div>
+                    <div className="brandqr__qr-corner brandqr__qr-corner--tr"></div>
+                    <div className="brandqr__qr-corner brandqr__qr-corner--bl"></div>
+                    <div className="brandqr__qr-corner brandqr__qr-corner--br"></div>
+                  </div>
                   <div className="brandqr__format-badges">
                     <span className="brandqr__format-badge">PNG</span>
                     <span className="brandqr__format-badge">SVG</span>
@@ -333,63 +422,9 @@ BrandQR.generate(WiFi:S:MiFi;T:S:MyCafe;T:WPA;P:guest22))
               </pre>
             </div>
             <div className="brandqr__terminal-qr">
-              {qrCodeDataURL && (
-                <img src={qrCodeDataURL} alt="Terminal QR" className="brandqr__terminal-qr-image" />
+              {terminalQR && (
+                <img src={terminalQR} alt="Terminal QR" className="brandqr__terminal-qr-image" />
               )}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="brandqr__customization">
-        <div className="brandqr__customization-container">
-          <h2 className="brandqr__section-title">Customize Your QR</h2>
-
-          <div className="brandqr__customization-grid">
-            <div className="brandqr__customization-controls">
-              <div className="brandqr__control-group">
-                <label className="brandqr__control-label">QR Code Color</label>
-                <div className="brandqr__color-picker">
-                  <input
-                    type="color"
-                    className="brandqr__color-input"
-                    value={qrColor}
-                    onChange={(e) => setQrColor(e.target.value)}
-                  />
-                  <span className="brandqr__color-value">{qrColor}</span>
-                </div>
-              </div>
-
-              <div className="brandqr__control-group">
-                <label className="brandqr__control-label">Quick Presets</label>
-                <div className="brandqr__preset-colors">
-                  <button
-                    className="brandqr__preset-btn"
-                    style={{ background: '#000000' }}
-                    onClick={() => setQrColor('#000000')}
-                  ></button>
-                  <button
-                    className="brandqr__preset-btn"
-                    style={{ background: '#8B5CF6' }}
-                    onClick={() => setQrColor('#8B5CF6')}
-                  ></button>
-                  <button
-                    className="brandqr__preset-btn"
-                    style={{ background: '#06B6D4' }}
-                    onClick={() => setQrColor('#06B6D4')}
-                  ></button>
-                  <button
-                    className="brandqr__preset-btn"
-                    style={{ background: '#EC4899' }}
-                    onClick={() => setQrColor('#EC4899')}
-                  ></button>
-                  <button
-                    className="brandqr__preset-btn"
-                    style={{ background: '#10B981' }}
-                    onClick={() => setQrColor('#10B981')}
-                  ></button>
-                </div>
-              </div>
             </div>
           </div>
         </div>
