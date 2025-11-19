@@ -13,7 +13,10 @@ const QRGenerator = () => {
   const [landingPageUrl, setLandingPageUrl] = useState('')
   const [error, setError] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
+  const [logoImage, setLogoImage] = useState(null)
+  const [logoPreview, setLogoPreview] = useState('')
   const canvasRef = useRef(null)
+  const fileInputRef = useRef(null)
 
   const generateSlug = () => {
     return Math.random().toString(36).substring(2, 10) + Date.now().toString(36)
@@ -27,6 +30,68 @@ const QRGenerator = () => {
     } catch (e) {
       return false
     }
+  }
+
+  const handleLogoUpload = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    if (!file.type.startsWith('image/')) {
+      setError('Please upload an image file')
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const img = new Image()
+      img.onload = () => {
+        setLogoImage(img)
+        setLogoPreview(event.target.result)
+      }
+      img.src = event.target.result
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const removeLogo = () => {
+    setLogoImage(null)
+    setLogoPreview('')
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
+
+  const embedLogoOnQR = async (qrDataURL, logoImg) => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+
+      const qrImg = new Image()
+      qrImg.onload = () => {
+        canvas.width = qrImg.width
+        canvas.height = qrImg.height
+
+        ctx.drawImage(qrImg, 0, 0)
+
+        const logoSize = Math.floor(qrImg.width * 0.25)
+        const logoX = (canvas.width - logoSize) / 2
+        const logoY = (canvas.height - logoSize) / 2
+
+        const padding = 8
+        ctx.fillStyle = '#FFFFFF'
+        ctx.fillRect(
+          logoX - padding,
+          logoY - padding,
+          logoSize + padding * 2,
+          logoSize + padding * 2
+        )
+
+        ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize)
+
+        resolve(canvas.toDataURL('image/png'))
+      }
+      qrImg.src = qrDataURL
+    })
   }
 
   const generateQRCode = async () => {
@@ -48,7 +113,7 @@ const QRGenerator = () => {
         const fullUrl = singleUrl.startsWith('http') ? singleUrl : `https://${singleUrl}`
         setLandingPageUrl(fullUrl)
 
-        const dataURL = await QRCode.toDataURL(fullUrl, {
+        let dataURL = await QRCode.toDataURL(fullUrl, {
           width: 300,
           margin: 2,
           color: {
@@ -56,6 +121,11 @@ const QRGenerator = () => {
             light: '#FFFFFF'
           }
         })
+
+        if (logoImage) {
+          dataURL = await embedLogoOnQR(dataURL, logoImage)
+        }
+
         setQrCodeDataURL(dataURL)
       } catch (err) {
         setError('Failed to generate QR code. Please try again.')
@@ -120,7 +190,7 @@ const QRGenerator = () => {
         const landingUrl = `${window.location.origin}/qr/${slug}`
         setLandingPageUrl(landingUrl)
 
-        const dataURL = await QRCode.toDataURL(landingUrl, {
+        let dataURL = await QRCode.toDataURL(landingUrl, {
           width: 300,
           margin: 2,
           color: {
@@ -128,6 +198,11 @@ const QRGenerator = () => {
             light: '#FFFFFF'
           }
         })
+
+        if (logoImage) {
+          dataURL = await embedLogoOnQR(dataURL, logoImage)
+        }
+
         setQrCodeDataURL(dataURL)
       } catch (err) {
         setError('Failed to generate QR code. Please try again.')
@@ -157,6 +232,7 @@ const QRGenerator = () => {
     setQrCodeDataURL('')
     setLandingPageUrl('')
     setError('')
+    removeLogo()
   }
 
   const handleKeyPress = (e) => {
@@ -194,21 +270,58 @@ const QRGenerator = () => {
               </div>
 
               {qrType === 'single' ? (
-                <div className="qr-generator__field">
-                  <label className="qr-generator__label" htmlFor="single-url">
-                    URL
-                  </label>
-                  <input
-                    id="single-url"
-                    type="text"
-                    className="qr-generator__input"
-                    placeholder="e.g., example.com or https://example.com"
-                    value={singleUrl}
-                    onChange={(e) => setSingleUrl(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    disabled={isGenerating}
-                  />
-                </div>
+                <>
+                  <div className="qr-generator__field">
+                    <label className="qr-generator__label" htmlFor="single-url">
+                      URL
+                    </label>
+                    <input
+                      id="single-url"
+                      type="text"
+                      className="qr-generator__input"
+                      placeholder="e.g., example.com or https://example.com"
+                      value={singleUrl}
+                      onChange={(e) => setSingleUrl(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      disabled={isGenerating}
+                    />
+                  </div>
+
+                  <div className="qr-generator__field">
+                    <label className="qr-generator__label">
+                      Logo (Optional)
+                    </label>
+                    {!logoPreview ? (
+                      <div className="qr-generator__logo-upload">
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/*"
+                          onChange={handleLogoUpload}
+                          className="qr-generator__file-input"
+                          id="logo-upload"
+                          disabled={isGenerating}
+                        />
+                        <label htmlFor="logo-upload" className="qr-generator__file-label">
+                          <span className="qr-generator__upload-icon">📷</span>
+                          <span>Upload Logo</span>
+                        </label>
+                      </div>
+                    ) : (
+                      <div className="qr-generator__logo-preview">
+                        <img src={logoPreview} alt="Logo preview" className="qr-generator__logo-image" />
+                        <button
+                          type="button"
+                          onClick={removeLogo}
+                          className="qr-generator__remove-logo"
+                          disabled={isGenerating}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </>
               ) : (
                 <>
               <div className="qr-generator__field">
@@ -260,6 +373,41 @@ const QRGenerator = () => {
                     disabled={isGenerating}
                   />
                 </div>
+
+                  <div className="qr-generator__field">
+                    <label className="qr-generator__label">
+                      Logo (Optional)
+                    </label>
+                    {!logoPreview ? (
+                      <div className="qr-generator__logo-upload">
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/*"
+                          onChange={handleLogoUpload}
+                          className="qr-generator__file-input"
+                          id="logo-upload-multi"
+                          disabled={isGenerating}
+                        />
+                        <label htmlFor="logo-upload-multi" className="qr-generator__file-label">
+                          <span className="qr-generator__upload-icon">📷</span>
+                          <span>Upload Logo</span>
+                        </label>
+                      </div>
+                    ) : (
+                      <div className="qr-generator__logo-preview">
+                        <img src={logoPreview} alt="Logo preview" className="qr-generator__logo-image" />
+                        <button
+                          type="button"
+                          onClick={removeLogo}
+                          className="qr-generator__remove-logo"
+                          disabled={isGenerating}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    )}
+                  </div>
               </>
               )}
 
