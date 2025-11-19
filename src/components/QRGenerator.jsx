@@ -1,9 +1,11 @@
 import { useState, useRef } from 'react'
 import QRCode from 'qrcode'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../contexts/AuthContext'
 import './QRGenerator.css'
 
 const QRGenerator = () => {
+  const { user } = useAuth()
   const [qrType, setQrType] = useState('single')
   const [singleUrl, setSingleUrl] = useState('')
   const [title, setTitle] = useState('')
@@ -157,6 +159,30 @@ const QRGenerator = () => {
         }
 
         setQrCodeDataURL(dataURL)
+
+        if (user) {
+          try {
+            const slug = generateSlug()
+            const { error: dbError } = await supabase
+              .from('qr_codes')
+              .insert([{
+                user_id: user.id,
+                slug,
+                title: title.trim() || 'Single URL QR Code',
+                qr_type: 'single-url',
+                qr_content: fullUrl,
+                qr_image_data: dataURL,
+                logo_data: logoPreview || '',
+                qr_color: '#000000'
+              }])
+
+            if (dbError) {
+              console.error('Failed to save QR code to database:', dbError)
+            }
+          } catch (dbErr) {
+            console.error('Database save error:', dbErr)
+          }
+        }
       } catch (err) {
         setError('Failed to generate QR code. Please try again.')
         console.error(err)
@@ -198,9 +224,19 @@ const QRGenerator = () => {
           })
         }
 
+        const qrCodeInsert = {
+          slug,
+          title: title.trim() || 'Multi-Platform QR Code',
+          qr_type: 'multi-platform'
+        }
+
+        if (user) {
+          qrCodeInsert.user_id = user.id
+        }
+
         const { data: qrCodeData, error: qrError } = await supabase
           .from('qr_codes')
-          .insert([{ slug, title: title.trim() }])
+          .insert([qrCodeInsert])
           .select()
           .single()
 
@@ -235,6 +271,25 @@ const QRGenerator = () => {
         }
 
         setQrCodeDataURL(dataURL)
+
+        if (user) {
+          try {
+            const { error: updateError } = await supabase
+              .from('qr_codes')
+              .update({
+                qr_image_data: dataURL,
+                logo_data: logoPreview || '',
+                qr_color: '#000000'
+              })
+              .eq('id', qrCodeData.id)
+
+            if (updateError) {
+              console.error('Failed to update QR code image:', updateError)
+            }
+          } catch (updateErr) {
+            console.error('QR code image update error:', updateErr)
+          }
+        }
       } catch (err) {
         setError('Failed to generate QR code. Please try again.')
         console.error(err)

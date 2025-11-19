@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import QRCode from 'qrcode'
+import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import AuthModal from './AuthModal'
 import './BrandQRLanding.css'
@@ -17,6 +18,8 @@ const BrandQRLanding = () => {
   const [isDashboardActive, setIsDashboardActive] = useState(false)
   const [logoImage, setLogoImage] = useState(null)
   const [logoPreview, setLogoPreview] = useState('')
+  const [savedQRCodes, setSavedQRCodes] = useState([])
+  const [showSavedQRs, setShowSavedQRs] = useState(false)
   const debounceTimer = useRef(null)
   const canvasRef = useRef(null)
   const fileInputRef = useRef(null)
@@ -144,6 +147,38 @@ const BrandQRLanding = () => {
     })
   }
 
+  const generateSlug = () => {
+    return Math.random().toString(36).substring(2, 10) + Date.now().toString(36)
+  }
+
+  const saveQRCodeToDatabase = async (text, dataURL, type, color) => {
+    if (!user) return
+
+    try {
+      const slug = generateSlug()
+      const { error: dbError } = await supabase
+        .from('qr_codes')
+        .insert([{
+          user_id: user.id,
+          slug,
+          title: `${type.toUpperCase()} QR Code`,
+          qr_type: type,
+          qr_content: text,
+          qr_image_data: dataURL,
+          logo_data: logoPreview || '',
+          qr_color: color
+        }])
+
+      if (dbError) {
+        console.error('Failed to save QR code to database:', dbError)
+      } else {
+        await fetchSavedQRCodes()
+      }
+    } catch (dbErr) {
+      console.error('Database save error:', dbErr)
+    }
+  }
+
   const generateQRCode = async (text, color = qrColor) => {
     if (!text.trim()) {
       setQrCodeDataURL('')
@@ -166,10 +201,36 @@ const BrandQRLanding = () => {
       }
 
       setQrCodeDataURL(dataURL)
+
+      await saveQRCodeToDatabase(text, dataURL, detectedType, color)
     } catch (err) {
       console.error('QR generation error:', err)
     }
   }
+
+  const fetchSavedQRCodes = async () => {
+    if (!user) {
+      setSavedQRCodes([])
+      return
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('qr_codes')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+      setSavedQRCodes(data || [])
+    } catch (err) {
+      console.error('Failed to fetch saved QR codes:', err)
+    }
+  }
+
+  useEffect(() => {
+    fetchSavedQRCodes()
+  }, [user])
 
   useEffect(() => {
     if (debounceTimer.current) {
@@ -405,6 +466,15 @@ const BrandQRLanding = () => {
                 {userMenuOpen && (
                   <div className="brandqr__user-dropdown">
                     <div className="brandqr__user-email">{user.email}</div>
+                    <button
+                      className="brandqr__dropdown-item"
+                      onClick={() => {
+                        setShowSavedQRs(!showSavedQRs)
+                        setUserMenuOpen(false)
+                      }}
+                    >
+                      My QR Codes ({savedQRCodes.length})
+                    </button>
                     <button
                       className="brandqr__sign-out"
                       onClick={() => {
@@ -749,6 +819,46 @@ const BrandQRLanding = () => {
         isOpen={authModalOpen}
         onClose={() => setAuthModalOpen(false)}
       />
+
+      {showSavedQRs && (
+        <div className="brandqr__saved-modal" onClick={() => setShowSavedQRs(false)}>
+          <div className="brandqr__saved-content" onClick={(e) => e.stopPropagation()}>
+            <div className="brandqr__saved-header">
+              <h2>My Saved QR Codes</h2>
+              <button className="brandqr__close-button" onClick={() => setShowSavedQRs(false)}>✕</button>
+            </div>
+            <div className="brandqr__saved-grid">
+              {savedQRCodes.length === 0 ? (
+                <p className="brandqr__empty-message">No saved QR codes yet. Create one to get started!</p>
+              ) : (
+                savedQRCodes.map((qr) => (
+                  <div key={qr.id} className="brandqr__saved-item">
+                    <div className="brandqr__saved-image">
+                      {qr.qr_image_data && (
+                        <img src={qr.qr_image_data} alt={qr.title} />
+                      )}
+                    </div>
+                    <div className="brandqr__saved-info">
+                      <h3>{qr.title}</h3>
+                      <p className="brandqr__saved-type">{qr.qr_type}</p>
+                      <p className="brandqr__saved-date">
+                        {new Date(qr.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <a
+                      href={qr.qr_image_data}
+                      download={`${qr.title}.png`}
+                      className="brandqr__download-button"
+                    >
+                      Download
+                    </a>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
