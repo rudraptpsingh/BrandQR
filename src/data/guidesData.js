@@ -17,6 +17,40 @@ export const guidesData = [
     metaDescription: 'Master branded QR codes with our comprehensive guide. Learn design best practices, tracking analytics, and how to increase scan rates by 30%.',
     keywords: ['branded qr codes', 'qr code analytics', 'logo in qr code', 'dynamic qr code benefits', 'trackable qr codes']
   },
+  {
+    id: 'vector-qr-codes',
+    slug: 'vector-qr-codes',
+    title: 'SVG vs. PNG: Why Designers Must Use Vector QR Codes for Print & Scale',
+    description: 'Discover why vector SVG QR codes are essential for professional print projects. Learn the technical differences, scaling benefits, and how to prepare files for commercial printers.',
+    excerpt: 'PNG QR codes pixelate when scaled. SVG vector codes remain crisp at any size—from business cards to billboards. Essential knowledge for designers.',
+    author: 'BrandQR Team',
+    publishedDate: '2025-11-19',
+    readTime: '8 min read',
+    category: 'Design & Technical',
+    tags: ['SVG QR Codes', 'Vector Graphics', 'Print Design', 'Scalability', 'Professional Design'],
+    featured: false,
+    image: '/guides/vector-qr-codes.jpg', // Placeholder
+    metaTitle: 'SVG vs PNG QR Codes: Why Vector Format Matters | BrandQR',
+    metaDescription: 'Learn why SVG vector QR codes are essential for print and scaling. Compare technical specs, print quality, and discover best practices for designers.',
+    keywords: ['svg qr codes', 'vector qr codes', 'png vs svg', 'print qr codes', 'scalable qr codes', 'professional qr design']
+  },
+  {
+    id: 'editable-qr-codes',
+    slug: 'editable-qr-codes',
+    title: 'Never Reprint Again: How Editable QR Codes Save Marketing Budgets',
+    description: 'Discover how editable QR codes eliminate costly reprints and provide flexibility for campaigns. Real case studies showing ROI from link management and analytics.',
+    excerpt: 'Stop wasting budget on reprints. Editable QR codes let you update destinations instantly—fix typos, change campaigns, and track everything without printing new codes.',
+    author: 'BrandQR Team',
+    publishedDate: '2025-11-19',
+    readTime: '10 min read',
+    category: 'Marketing & ROI',
+    tags: ['Editable QR Codes', 'Marketing Budget', 'Cost Savings', 'Campaign Management', 'ROI'],
+    featured: false,
+    image: '/guides/editable-qr-codes.jpg', // Placeholder
+    metaTitle: 'Never Reprint Again: Editable QR Codes Save Marketing Budgets | BrandQR',
+    metaDescription: 'Learn how editable QR codes eliminate reprinting costs and provide campaign flexibility. Real case studies with proven ROI from smart link management.',
+    keywords: ['editable qr codes', 'dynamic qr codes', 'qr code cost savings', 'marketing budget', 'campaign management', 'qr code roi']
+  },
   // Future guides will be added here:
   // {
   //   id: 'vector-qr-codes',

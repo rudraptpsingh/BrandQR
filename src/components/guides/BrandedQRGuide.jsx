@@ -137,7 +137,7 @@ const BrandedQRGuide = () => {
 
           <p className="internal-link-context">
             For print quality, learn why you must use a 
-            <a href="/guide/vector-qr-codes" className="internal-link"> Vector (SVG) QR Code</a> 
+            <a href="/guides/vector-qr-codes" className="internal-link"> Vector (SVG) QR Code</a> 
             to maintain crisp edges at any size.
           </p>
         </section>
@@ -385,7 +385,7 @@ const BrandedQRGuide = () => {
 
           <p className="internal-link-context">
             See how 
-            <a href="/guide/editable-qr-codes" className="internal-link"> Editable QR Codes save hundreds on reprinting costs</a> 
+            <a href="/guides/editable-qr-codes" className="internal-link"> Editable QR Codes save hundreds on reprinting costs</a> 
             when your URLs change or campaigns need updates.
           </p>
         </section>
