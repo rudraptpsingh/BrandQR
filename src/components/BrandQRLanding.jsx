@@ -12,9 +12,8 @@ const BrandQRLanding = () => {
   const [qrCodeDataURL, setQrCodeDataURL] = useState('')
   const [detectedType, setDetectedType] = useState('text')
   const [qrColor, setQrColor] = useState('#000000')
-  const [isTerminalVisible, setIsTerminalVisible] = useState(false)
-  const [terminalText, setTerminalText] = useState('')
-  const [terminalQR, setTerminalQR] = useState('')
+  const [activeDemo, setActiveDemo] = useState(0)
+  const [demoQRs, setDemoQRs] = useState({})
   const [isDashboardActive, setIsDashboardActive] = useState(false)
   const debounceTimer = useRef(null)
   const canvasRef = useRef(null)
@@ -124,46 +123,40 @@ const BrandQRLanding = () => {
   }
 
   useEffect(() => {
-    const terminalCode = `BrandQR.generate("WIFI:S:MyCafe;T:WPA;P:guest123;;")
-// Generating QR code...
-// ✓ QR code generated successfully!
+    const demoData = [
+      { type: 'url', value: 'https://brandqr.com', color: '#8B5CF6' },
+      { type: 'wifi', value: 'WIFI:S:MyCafe;T:WPA;P:guest123;;', color: '#06B6D4' },
+      { type: 'email', value: 'mailto:hello@brandqr.com', color: '#10B981' },
+      { type: 'text', value: 'Hello, BrandQR!', color: '#F59E0B' }
+    ]
 
-BrandQR.generate("https://brandqr.com")
-// Generating QR code...
-// ✓ QR code generated successfully!`
-
-    let index = 0
-    const typeInterval = setInterval(() => {
-      if (index < terminalCode.length) {
-        setTerminalText(terminalCode.substring(0, index + 1))
-        index++
-      } else {
-        clearInterval(typeInterval)
+    const generateDemos = async () => {
+      const qrs = {}
+      for (let i = 0; i < demoData.length; i++) {
+        try {
+          const dataURL = await QRCode.toDataURL(demoData[i].value, {
+            width: 300,
+            margin: 2,
+            color: {
+              dark: demoData[i].color,
+              light: '#ffffff'
+            }
+          })
+          qrs[i] = { ...demoData[i], qr: dataURL }
+        } catch (err) {
+          console.error('Demo QR generation error:', err)
+        }
       }
-    }, 50)
-
-    return () => clearInterval(typeInterval)
-  }, [])
-
-  // Generate demo QR code for terminal
-  useEffect(() => {
-    const generateTerminalQR = async () => {
-      try {
-        const dataURL = await QRCode.toDataURL('https://brandqr.com', {
-          width: 300,
-          margin: 2,
-          color: {
-            dark: '#8B5CF6',
-            light: '#ffffff'
-          }
-        })
-        setTerminalQR(dataURL)
-      } catch (err) {
-        console.error('Terminal QR generation error:', err)
-      }
+      setDemoQRs(qrs)
     }
-    
-    generateTerminalQR()
+
+    generateDemos()
+
+    const interval = setInterval(() => {
+      setActiveDemo((prev) => (prev + 1) % 4)
+    }, 3000)
+
+    return () => clearInterval(interval)
   }, [])
 
   const getTypeIcon = (type) => {
@@ -440,27 +433,47 @@ BrandQR.generate("https://brandqr.com")
         </div>
       </section>
 
-      <section className="brandqr__terminal">
-        <div className="brandqr__terminal-container">
+      <section className="brandqr__demo">
+        <div className="brandqr__demo-container">
           <h2 className="brandqr__section-title">See It In Action</h2>
+          <p className="brandqr__section-subtitle">
+            Watch how BrandQR intelligently generates QR codes for different content types
+          </p>
 
-          <div className="brandqr__terminal-window">
-            <div className="brandqr__terminal-header">
-              <div className="brandqr__terminal-dots">
-                <span></span>
-                <span></span>
-                <span></span>
-              </div>
-              <div className="brandqr__terminal-title">brandqr-demo.js</div>
+          <div className="brandqr__demo-showcase">
+            <div className="brandqr__demo-inputs">
+              {Object.keys(demoQRs).map((key) => (
+                <div
+                  key={key}
+                  className={`brandqr__demo-input ${activeDemo === parseInt(key) ? 'brandqr__demo-input--active' : ''}`}
+                  onClick={() => setActiveDemo(parseInt(key))}
+                >
+                  <div className="brandqr__demo-input-header">
+                    <span className="brandqr__demo-type-badge" style={{ background: demoQRs[key].color }}>
+                      {demoQRs[key].type.toUpperCase()}
+                    </span>
+                  </div>
+                  <div className="brandqr__demo-input-value">
+                    {demoQRs[key].value}
+                  </div>
+                </div>
+              ))}
             </div>
-            <div className="brandqr__terminal-body">
-              <pre className="brandqr__terminal-code">
-                <code>{terminalText}<span className="brandqr__terminal-cursor">|</span></code>
-              </pre>
-            </div>
-            <div className="brandqr__terminal-qr">
-              {terminalQR && (
-                <img src={terminalQR} alt="Terminal QR" className="brandqr__terminal-qr-image" />
+
+            <div className="brandqr__demo-output">
+              {demoQRs[activeDemo] && (
+                <>
+                  <div className="brandqr__demo-qr-container">
+                    <img
+                      src={demoQRs[activeDemo].qr}
+                      alt={`${demoQRs[activeDemo].type} QR code`}
+                      className="brandqr__demo-qr-image"
+                    />
+                  </div>
+                  <div className="brandqr__demo-output-label">
+                    Generated {demoQRs[activeDemo].type} QR Code
+                  </div>
+                </>
               )}
             </div>
           </div>
