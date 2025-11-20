@@ -784,47 +784,6 @@ const Dashboard = ({ user, savedQRCodes, onDeleteQRCode, inputValue, setInputVal
                             </div>
                           </div>
 
-                          <div className="dashboard__field-group">
-                            <label className="dashboard__field-label">Pattern Style</label>
-                            <div className="dashboard__pattern-selector">
-                              <button
-                                className={`dashboard__pattern-option ${selectedPattern === 'square' ? 'dashboard__pattern-option--active' : ''}`}
-                                onClick={() => {
-                                  setSelectedPattern('square')
-                                  if (inputValue && generateQRCode) {
-                                    generateQRCode(inputValue, qrColor, 'square')
-                                  }
-                                }}
-                              >
-                                <div className="dashboard__pattern-preview dashboard__pattern-preview--square"></div>
-                                <span>Square</span>
-                              </button>
-                              <button
-                                className={`dashboard__pattern-option ${selectedPattern === 'round' ? 'dashboard__pattern-option--active' : ''}`}
-                                onClick={() => {
-                                  setSelectedPattern('round')
-                                  if (inputValue && generateQRCode) {
-                                    generateQRCode(inputValue, qrColor, 'round')
-                                  }
-                                }}
-                              >
-                                <div className="dashboard__pattern-preview dashboard__pattern-preview--round"></div>
-                                <span>Round</span>
-                              </button>
-                              <button
-                                className={`dashboard__pattern-option ${selectedPattern === 'diamond' ? 'dashboard__pattern-option--active' : ''}`}
-                                onClick={() => {
-                                  setSelectedPattern('diamond')
-                                  if (inputValue && generateQRCode) {
-                                    generateQRCode(inputValue, qrColor, 'diamond')
-                                  }
-                                }}
-                              >
-                                <div className="dashboard__pattern-preview dashboard__pattern-preview--diamond"></div>
-                                <span>Diamond</span>
-                              </button>
-                            </div>
-                          </div>
 
                         <div className="dashboard__field-group">
                           <label className="dashboard__field-label">Logo (Optional)</label>
