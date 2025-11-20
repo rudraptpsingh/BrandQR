@@ -360,7 +360,7 @@ const BrandQRLanding = () => {
         clearTimeout(debounceTimer.current)
       }
     }
-  }, [inputValue, qrColor, logoImage])
+  }, [inputValue, qrColor, logoImage, selectedPattern])
 
   const downloadQRCode = async (format) => {
     if (!qrCodeDataURL) return
