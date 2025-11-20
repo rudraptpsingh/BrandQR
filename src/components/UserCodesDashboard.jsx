@@ -80,13 +80,30 @@ const UserCodesDashboard = ({ qrCodes, onEdit, onDownload, onDelete }) => {
             <p className="user-dashboard__subtitle">Manage your dynamic and static creations</p>
           </div>
           <div className="user-dashboard__stats">
-            <div className="user-dashboard__stat">
-              <span className="user-dashboard__stat-value">{qrCodes.length}</span>
-              <span className="user-dashboard__stat-label">Total Codes</span>
+            <div className="user-dashboard__stat-card">
+              <div className="user-dashboard__stat-icon">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="3" y="3" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
+                  <rect x="3" y="14" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
+                  <rect x="14" y="3" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
+                  <rect x="16" y="16" width="3" height="3" fill="currentColor"/>
+                </svg>
+              </div>
+              <div className="user-dashboard__stat-content">
+                <span className="user-dashboard__stat-value">{qrCodes.length}</span>
+                <span className="user-dashboard__stat-label">Total Codes</span>
+              </div>
             </div>
-            <div className="user-dashboard__stat">
-              <span className="user-dashboard__stat-value">{qrCodes.filter(qr => getTypeLabel(qr.qr_type) === 'Smart Code').length}</span>
-              <span className="user-dashboard__stat-label">Smart Codes</span>
+            <div className="user-dashboard__stat-card">
+              <div className="user-dashboard__stat-icon user-dashboard__stat-icon--smart">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <div className="user-dashboard__stat-content">
+                <span className="user-dashboard__stat-value">{qrCodes.filter(qr => getTypeLabel(qr.qr_type) === 'Smart Code').length}</span>
+                <span className="user-dashboard__stat-label">Smart Codes</span>
+              </div>
             </div>
           </div>
         </div>
@@ -133,7 +150,17 @@ const UserCodesDashboard = ({ qrCodes, onEdit, onDownload, onDelete }) => {
                     <div className="code-card__title-row">
                       <h3 className="code-card__title">{qr.title}</h3>
                       <span className={`code-card__badge code-card__badge--${isSmartCode ? 'smart' : 'basic'}`}>
-                        {typeLabel}
+                        {isSmartCode ? (
+                          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        ) : (
+                          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M10 13C10.4295 13.5741 10.9774 14.0491 11.6066 14.3929C12.2357 14.7367 12.9315 14.9411 13.6467 14.9923C14.3618 15.0435 15.0796 14.9403 15.7513 14.6897C16.4231 14.4392 17.0331 14.047 17.54 13.54L20.54 10.54C21.4508 9.59695 21.9548 8.33394 21.9434 7.02296C21.932 5.71198 21.4061 4.45791 20.4791 3.53087C19.5521 2.60383 18.298 2.07799 16.987 2.0666C15.676 2.0552 14.413 2.55918 13.47 3.46997L11.75 5.17997" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M14 11C13.5705 10.4259 13.0226 9.95083 12.3934 9.60704C11.7642 9.26325 11.0685 9.05885 10.3533 9.00765C9.63819 8.95644 8.92037 9.05963 8.24861 9.31018C7.57685 9.56073 6.96689 9.9529 6.45996 10.46L3.45996 13.46C2.54917 14.403 2.04519 15.666 2.05659 16.977C2.06798 18.288 2.59382 19.5421 3.52086 20.4691C4.4479 21.3961 5.70197 21.922 7.01295 21.9334C8.32393 21.9448 9.58694 21.4408 10.53 20.53L12.24 18.82" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        )}
+                        <span>{typeLabel}</span>
                       </span>
                     </div>
 
@@ -163,30 +190,28 @@ const UserCodesDashboard = ({ qrCodes, onEdit, onDownload, onDelete }) => {
                       )}
 
                       <div className="code-card__actions-row">
-                        <div className="code-card__download-group">
-                          <button
-                            className="code-card__action-button code-card__action-button--download-png"
-                            onClick={() => handleDownloadPNG(qr)}
-                            aria-label="Download PNG"
-                          >
-                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <path d="M12 15L12 3M12 15L8 11M12 15L16 11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                              <path d="M3 15L3 18C3 19.6569 4.34315 21 6 21L18 21C19.6569 21 21 19.6569 21 18L21 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                            </svg>
-                            PNG
-                          </button>
-                          <button
-                            className="code-card__action-button code-card__action-button--download-svg"
-                            onClick={() => handleDownloadSVG(qr)}
-                            aria-label="Download SVG"
-                          >
-                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <path d="M12 15L12 3M12 15L8 11M12 15L16 11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                              <path d="M3 15L3 18C3 19.6569 4.34315 21 6 21L18 21C19.6569 21 21 19.6569 21 18L21 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                            </svg>
-                            SVG
-                          </button>
-                        </div>
+                        <button
+                          className="code-card__action-button code-card__action-button--download-png"
+                          onClick={() => handleDownloadPNG(qr)}
+                          aria-label="Download PNG"
+                        >
+                          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 15L12 3M12 15L8 11M12 15L16 11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M3 15L3 18C3 19.6569 4.34315 21 6 21L18 21C19.6569 21 21 19.6569 21 18L21 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                          </svg>
+                          <span>PNG</span>
+                        </button>
+                        <button
+                          className="code-card__action-button code-card__action-button--download-svg"
+                          onClick={() => handleDownloadSVG(qr)}
+                          aria-label="Download SVG"
+                        >
+                          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 15L12 3M12 15L8 11M12 15L16 11" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M3 15L3 18C3 19.6569 4.34315 21 6 21L18 21C19.6569 21 21 19.6569 21 18L21 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                          </svg>
+                          <span>SVG</span>
+                        </button>
                         <button
                           className="code-card__action-button code-card__action-button--delete"
                           onClick={() => onDelete(qr.id)}
@@ -196,7 +221,7 @@ const UserCodesDashboard = ({ qrCodes, onEdit, onDownload, onDelete }) => {
                             <path d="M3 6H5H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                             <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                           </svg>
-                          Delete
+                          <span>Delete</span>
                         </button>
                       </div>
                     </div>

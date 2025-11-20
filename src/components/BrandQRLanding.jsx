@@ -617,19 +617,40 @@ const BrandQRLanding = () => {
               <div className="brandqr__welcome-section">
                 <h1 className="brandqr__welcome-title">Welcome back!</h1>
                 <p className="brandqr__welcome-subtitle">Follow these quick steps to start getting scans:</p>
-                
-                <div className="brandqr__quick-steps">
+
+                <div className="brandqr__quick-steps-card">
                   <div className="brandqr__step">
-                    <div className="brandqr__step-number">1</div>
-                    <div className="brandqr__step-text">Scan your code</div>
+                    <div className="brandqr__step-icon">
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M21 21L16.65 16.65M19 11C19 15.4183 15.4183 19 11 19C6.58172 19 3 15.4183 3 11C3 6.58172 6.58172 3 11 3C15.4183 3 19 6.58172 19 11Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
+                    <div className="brandqr__step-content">
+                      <div className="brandqr__step-title">Scan your code</div>
+                      <div className="brandqr__step-desc">Test functionality</div>
+                    </div>
                   </div>
                   <div className="brandqr__step">
-                    <div className="brandqr__step-number">2</div>
-                    <div className="brandqr__step-text">Enhance your code design</div>
+                    <div className="brandqr__step-icon">
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
+                    <div className="brandqr__step-content">
+                      <div className="brandqr__step-title">Enhance your design</div>
+                      <div className="brandqr__step-desc">Add logo & colors</div>
+                    </div>
                   </div>
                   <div className="brandqr__step">
-                    <div className="brandqr__step-number">3</div>
-                    <div className="brandqr__step-text">Distribute your code</div>
+                    <div className="brandqr__step-icon">
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M4 12V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V12M16 6L12 2M12 2L8 6M12 2V15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
+                    <div className="brandqr__step-content">
+                      <div className="brandqr__step-title">Distribute your code</div>
+                      <div className="brandqr__step-desc">Share everywhere</div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -637,18 +658,31 @@ const BrandQRLanding = () => {
               <div className="brandqr__dashboard-stats-container">
                 <div className="brandqr__stats-grid">
                   <div className="brandqr__stat-card">
-                    <div className="brandqr__stat-icon">📊</div>
+                    <div className="brandqr__stat-icon">
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18 20V10M12 20V4M6 20V14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
                     <div className="brandqr__stat-content">
                       <div className="brandqr__stat-value">{calculateStats().totalScans}</div>
-                      <div className="brandqr__stat-label">Scans over the last 30 days</div>
+                      <div className="brandqr__stat-label">Total Scans</div>
+                      <div className="brandqr__stat-sublabel">Last 30 days</div>
                     </div>
                   </div>
 
                   <div className="brandqr__stat-card">
-                    <div className="brandqr__stat-icon">🔢</div>
+                    <div className="brandqr__stat-icon">
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="3" y="3" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
+                        <rect x="3" y="14" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
+                        <rect x="14" y="3" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
+                        <rect x="16" y="16" width="3" height="3" fill="currentColor"/>
+                      </svg>
+                    </div>
                     <div className="brandqr__stat-content">
                       <div className="brandqr__stat-value">{calculateStats().totalCodes}</div>
                       <div className="brandqr__stat-label">Total QR Codes</div>
+                      <div className="brandqr__stat-sublabel">Created by you</div>
                     </div>
                   </div>
                 </div>
@@ -677,18 +711,43 @@ const BrandQRLanding = () => {
                       </div>
                       <div className="brandqr__latest-code-info">
                         <div className="brandqr__latest-code-scans">
-                          <div className="brandqr__refresh-icon">🔄</div>
+                          <div className="brandqr__refresh-icon">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M3 12C3 7.02944 7.02944 3 12 3C14.1963 3 16.2183 3.78809 17.7673 5.09906M21 12C21 16.9706 16.9706 21 12 21C9.80373 21 7.78175 20.2119 6.23275 18.9009M3 20V14H9M15 10H21V4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          </div>
                           <div className="brandqr__scans-display">
                             <div className="brandqr__scans-number">{calculateStats().latestCode.scan_count || 0}</div>
-                            <div className="brandqr__scans-text">Scans over the last 30 days</div>
+                            <div className="brandqr__scans-text">Scans</div>
+                            <div className="brandqr__scans-subtext">Last 30 days</div>
+                          </div>
+                        </div>
+                        <div className="brandqr__latest-total-scans">
+                          <div className="brandqr__total-scans-icon">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          </div>
+                          <div className="brandqr__total-scans-display">
+                            <div className="brandqr__total-scans-number">{calculateStats().latestCode.scan_count || 0}</div>
+                            <div className="brandqr__total-scans-text">Total Scans</div>
                           </div>
                         </div>
                         <div className="brandqr__latest-code-actions">
                           <button className="brandqr__action-btn brandqr__action-btn--primary">
-                            View analytics
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M9 19C9 19.5304 9.21071 20.0391 9.58579 20.4142C9.96086 20.7893 10.4696 21 11 21H13C13.5304 21 14.0391 20.7893 14.4142 20.4142C14.7893 20.0391 15 19.5304 15 19M18 8C18 6.4087 17.3679 4.88258 16.2426 3.75736C15.1174 2.63214 13.5913 2 12 2C10.4087 2 8.88258 2.63214 7.75736 3.75736C6.63214 4.88258 6 6.4087 6 8C6 15 3 17 3 17H21C21 17 18 15 18 8Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                            View Analytics
                           </button>
                           <button className="brandqr__action-btn">
-                            Code details
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M13 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V9L13 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M13 2V9H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                            Code Details
                           </button>
                         </div>
                       </div>
