@@ -526,6 +526,31 @@ const BrandQRLanding = () => {
     return icons[type] || '📝'
   }
 
+  // Calculate aggregate statistics for logged-in users
+  const calculateStats = () => {
+    const totalCodes = savedQRCodes.length
+    const totalScans = savedQRCodes.reduce((sum, qr) => sum + (qr.scan_count || 0), 0)
+    
+    // Calculate scans in last 30 days (simplified - using all scans for now as we don't have date-based scan data)
+    const scansLast30Days = totalScans
+    
+    const latestCode = savedQRCodes.length > 0 ? savedQRCodes[0] : null
+    
+    return {
+      totalCodes,
+      totalScans,
+      scansLast30Days,
+      latestCode
+    }
+  }
+
+  const scrollToGenerator = () => {
+    const generatorSection = document.getElementById('qr-generator-section')
+    if (generatorSection) {
+      generatorSection.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }
+
   return (
     <div className="brandqr">
       <div className="brandqr__aurora-bg"></div>
@@ -584,170 +609,402 @@ const BrandQRLanding = () => {
         </div>
       </nav>
 
-      <section className="brandqr__hero">
-        <div className="brandqr__hero-content">
-          <div className="brandqr__hero-text">
-            <h1 className="brandqr__hero-title">
-              Create Trackable & Branded QR Codes Instantly.
-            </h1>
-            <p className="brandqr__hero-subtitle">
-              Design beautiful, logo-embedded QR Codes in seconds. Unlock real-time scan analytics and change your link anytime.
-            </p>
-          </div>
-
-          <div className="brandqr__hero-visual">
-            <div className={`brandqr__dashboard ${isDashboardActive ? 'brandqr__dashboard--active' : ''}`}>
-              <div className="brandqr__dashboard-header">
-                <div className="brandqr__dashboard-logo">
-                  <div className="brandqr__dashboard-logo-icon"></div>
-                  <span>BrandQR</span>
-                </div>
-                <div className="brandqr__dashboard-actions">
-                  <div className="brandqr__dashboard-action-icon"></div>
-                  <div className="brandqr__dashboard-action-icon"></div>
+      {user ? (
+        <>
+          {/* Dashboard Hero for Logged-in Users */}
+          <section className="brandqr__dashboard-hero">
+            <div className="brandqr__dashboard-hero-container">
+              <div className="brandqr__welcome-section">
+                <h1 className="brandqr__welcome-title">Welcome back!</h1>
+                <p className="brandqr__welcome-subtitle">Follow these quick steps to start getting scans:</p>
+                
+                <div className="brandqr__quick-steps">
+                  <div className="brandqr__step">
+                    <div className="brandqr__step-number">1</div>
+                    <div className="brandqr__step-text">Scan your code</div>
+                  </div>
+                  <div className="brandqr__step">
+                    <div className="brandqr__step-number">2</div>
+                    <div className="brandqr__step-text">Enhance your code design</div>
+                  </div>
+                  <div className="brandqr__step">
+                    <div className="brandqr__step-number">3</div>
+                    <div className="brandqr__step-text">Distribute your code</div>
+                  </div>
                 </div>
               </div>
 
-              <div className="brandqr__generator-card">
-                <div className="brandqr__input-wrapper">
-                  <input
-                    type="text"
-                    className="brandqr__input"
-                    placeholder="Enter URL, Text, or More..."
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    onFocus={() => setIsDashboardActive(true)}
-                    onBlur={() => {
-                      if (!inputValue) setIsDashboardActive(false)
-                    }}
-                  />
-                  <div className="brandqr__type-badge">
-                    <span className="brandqr__type-icon">{getTypeIcon(detectedType)}</span>
-                    <span className="brandqr__type-text">{detectedType}</span>
-                  </div>
-                </div>
-
-                <div className="brandqr__color-options">
-                  <label className="brandqr__color-label">QR Color:</label>
-                  <div className="brandqr__color-presets">
-                    <button
-                      className={`brandqr__color-preset ${qrColor === '#000000' ? 'brandqr__color-preset--active' : ''}`}
-                      style={{ background: '#000000' }}
-                      onClick={() => setQrColor('#000000')}
-                      title="Black"
-                    ></button>
-                    <button
-                      className={`brandqr__color-preset ${qrColor === '#8B5CF6' ? 'brandqr__color-preset--active' : ''}`}
-                      style={{ background: '#8B5CF6' }}
-                      onClick={() => setQrColor('#8B5CF6')}
-                      title="Purple"
-                    ></button>
-                    <button
-                      className={`brandqr__color-preset ${qrColor === '#06B6D4' ? 'brandqr__color-preset--active' : ''}`}
-                      style={{ background: '#06B6D4' }}
-                      onClick={() => setQrColor('#06B6D4')}
-                      title="Cyan"
-                    ></button>
-                    <button
-                      className={`brandqr__color-preset ${qrColor === '#EC4899' ? 'brandqr__color-preset--active' : ''}`}
-                      style={{ background: '#EC4899' }}
-                      onClick={() => setQrColor('#EC4899')}
-                      title="Pink"
-                    ></button>
-                    <button
-                      className={`brandqr__color-preset ${qrColor === '#10B981' ? 'brandqr__color-preset--active' : ''}`}
-                      style={{ background: '#10B981' }}
-                      onClick={() => setQrColor('#10B981')}
-                      title="Green"
-                    ></button>
-                  </div>
-                </div>
-
-                <div className="brandqr__logo-section">
-                  <label className="brandqr__color-label">Logo (Optional):</label>
-                  {!logoPreview ? (
-                    <div className="brandqr__logo-upload">
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/*"
-                        onChange={handleLogoUpload}
-                        className="brandqr__file-input"
-                        id="logo-upload-brand"
-                      />
-                      <label htmlFor="logo-upload-brand" className="brandqr__file-label">
-                        <span>📷 Upload Logo</span>
-                      </label>
+              <div className="brandqr__dashboard-stats-container">
+                <div className="brandqr__stats-grid">
+                  <div className="brandqr__stat-card">
+                    <div className="brandqr__stat-icon">📊</div>
+                    <div className="brandqr__stat-content">
+                      <div className="brandqr__stat-value">{calculateStats().totalScans}</div>
+                      <div className="brandqr__stat-label">Scans over the last 30 days</div>
                     </div>
-                  ) : (
-                    <div className="brandqr__logo-preview">
-                      <img src={logoPreview} alt="Logo preview" className="brandqr__logo-image" />
-                      <button
-                        type="button"
-                        onClick={removeLogo}
-                        className="brandqr__remove-logo"
+                  </div>
+
+                  <div className="brandqr__stat-card">
+                    <div className="brandqr__stat-icon">🔢</div>
+                    <div className="brandqr__stat-content">
+                      <div className="brandqr__stat-value">{calculateStats().totalCodes}</div>
+                      <div className="brandqr__stat-label">Total QR Codes</div>
+                    </div>
+                  </div>
+                </div>
+
+                {calculateStats().latestCode && (
+                  <div className="brandqr__latest-code-card">
+                    <div className="brandqr__latest-code-header">
+                      <h3 className="brandqr__latest-code-title">Your latest code</h3>
+                      <button 
+                        className="brandqr__create-new-btn"
+                        onClick={scrollToGenerator}
                       >
-                        Remove
+                        + Create
                       </button>
                     </div>
-                  )}
-                </div>
-
-                <div className={`brandqr__qr-results ${qrCodeDataURL ? 'brandqr__qr-results--visible' : ''}`}>
-                  {qrCodeDataURL && (
-                    <>
-                      <div className="brandqr__qr-preview">
-                        <img src={qrCodeDataURL} alt="QR Code Preview" className="brandqr__qr-image" />
+                    <div className="brandqr__latest-code-content">
+                      <div className="brandqr__latest-code-qr">
+                        {calculateStats().latestCode.qr_image_data && (
+                          <img 
+                            src={calculateStats().latestCode.qr_image_data} 
+                            alt={calculateStats().latestCode.title}
+                            className="brandqr__latest-qr-image"
+                          />
+                        )}
+                        <div className="brandqr__scan-hint">Scan here</div>
                       </div>
-
-                      <div className="brandqr__download-buttons">
-                        <button
-                          className="brandqr__download-btn brandqr__download-btn--png"
-                          onClick={() => downloadQRCode('png')}
-                        >
-                          Download PNG
-                        </button>
-                        <button
-                          className="brandqr__download-btn brandqr__download-btn--svg"
-                          onClick={() => downloadQRCode('svg')}
-                        >
-                          Download SVG
-                        </button>
-                        <button
-                          className={`brandqr__download-btn brandqr__download-btn--save ${currentQRSaved ? 'brandqr__download-btn--saved' : ''}`}
-                          onClick={saveQRCodeToDatabase}
-                          disabled={isSaving || currentQRSaved}
-                        >
-                          {isSaving ? 'Saving...' : currentQRSaved ? 'Saved ✓' : 'Save QR Code'}
-                        </button>
+                      <div className="brandqr__latest-code-info">
+                        <div className="brandqr__latest-code-scans">
+                          <div className="brandqr__refresh-icon">🔄</div>
+                          <div className="brandqr__scans-display">
+                            <div className="brandqr__scans-number">{calculateStats().latestCode.scan_count || 0}</div>
+                            <div className="brandqr__scans-text">Scans over the last 30 days</div>
+                          </div>
+                        </div>
+                        <div className="brandqr__latest-code-actions">
+                          <button className="brandqr__action-btn brandqr__action-btn--primary">
+                            View analytics
+                          </button>
+                          <button className="brandqr__action-btn">
+                            Code details
+                          </button>
+                        </div>
                       </div>
-                    </>
-                  )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+
+          {/* User Codes Dashboard */}
+          <UserCodesDashboard
+            qrCodes={savedQRCodes}
+            onEdit={(qr) => {
+              setNotification({ type: 'info', message: 'Edit functionality coming soon!' })
+            }}
+            onDownload={(qr) => {
+              const link = document.createElement('a')
+              link.href = qr.qr_image_data
+              link.download = `${qr.title.replace(/[^a-z0-9]/gi, '_')}.png`
+              document.body.appendChild(link)
+              link.click()
+              document.body.removeChild(link)
+            }}
+            onDelete={deleteQRCode}
+          />
+
+          {/* QR Generator Section - Moved to Bottom for Logged-in Users */}
+          <section id="qr-generator-section" className="brandqr__generator-section">
+            <div className="brandqr__generator-container">
+              <h2 className="brandqr__section-title">Create New QR Code</h2>
+              <div className="brandqr__generator-wrapper">
+                <div className={`brandqr__dashboard ${isDashboardActive ? 'brandqr__dashboard--active' : ''}`}>
+                  <div className="brandqr__dashboard-header">
+                    <div className="brandqr__dashboard-logo">
+                      <div className="brandqr__dashboard-logo-icon"></div>
+                      <span>BrandQR</span>
+                    </div>
+                    <div className="brandqr__dashboard-actions">
+                      <div className="brandqr__dashboard-action-icon"></div>
+                      <div className="brandqr__dashboard-action-icon"></div>
+                    </div>
+                  </div>
+
+                  <div className="brandqr__generator-card">
+                    <div className="brandqr__input-wrapper">
+                      <input
+                        type="text"
+                        className="brandqr__input"
+                        placeholder="Enter URL, Text, or More..."
+                        value={inputValue}
+                        onChange={(e) => setInputValue(e.target.value)}
+                        onFocus={() => setIsDashboardActive(true)}
+                        onBlur={() => {
+                          if (!inputValue) setIsDashboardActive(false)
+                        }}
+                      />
+                      <div className="brandqr__type-badge">
+                        <span className="brandqr__type-icon">{getTypeIcon(detectedType)}</span>
+                        <span className="brandqr__type-text">{detectedType}</span>
+                      </div>
+                    </div>
+
+                    <div className="brandqr__color-options">
+                      <label className="brandqr__color-label">QR Color:</label>
+                      <div className="brandqr__color-presets">
+                        <button
+                          className={`brandqr__color-preset ${qrColor === '#000000' ? 'brandqr__color-preset--active' : ''}`}
+                          style={{ background: '#000000' }}
+                          onClick={() => setQrColor('#000000')}
+                          title="Black"
+                        ></button>
+                        <button
+                          className={`brandqr__color-preset ${qrColor === '#8B5CF6' ? 'brandqr__color-preset--active' : ''}`}
+                          style={{ background: '#8B5CF6' }}
+                          onClick={() => setQrColor('#8B5CF6')}
+                          title="Purple"
+                        ></button>
+                        <button
+                          className={`brandqr__color-preset ${qrColor === '#06B6D4' ? 'brandqr__color-preset--active' : ''}`}
+                          style={{ background: '#06B6D4' }}
+                          onClick={() => setQrColor('#06B6D4')}
+                          title="Cyan"
+                        ></button>
+                        <button
+                          className={`brandqr__color-preset ${qrColor === '#EC4899' ? 'brandqr__color-preset--active' : ''}`}
+                          style={{ background: '#EC4899' }}
+                          onClick={() => setQrColor('#EC4899')}
+                          title="Pink"
+                        ></button>
+                        <button
+                          className={`brandqr__color-preset ${qrColor === '#10B981' ? 'brandqr__color-preset--active' : ''}`}
+                          style={{ background: '#10B981' }}
+                          onClick={() => setQrColor('#10B981')}
+                          title="Green"
+                        ></button>
+                      </div>
+                    </div>
+
+                    <div className="brandqr__logo-section">
+                      <label className="brandqr__color-label">Logo (Optional):</label>
+                      {!logoPreview ? (
+                        <div className="brandqr__logo-upload">
+                          <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            onChange={handleLogoUpload}
+                            className="brandqr__file-input"
+                            id="logo-upload-brand"
+                          />
+                          <label htmlFor="logo-upload-brand" className="brandqr__file-label">
+                            <span>📷 Upload Logo</span>
+                          </label>
+                        </div>
+                      ) : (
+                        <div className="brandqr__logo-preview">
+                          <img src={logoPreview} alt="Logo preview" className="brandqr__logo-image" />
+                          <button
+                            type="button"
+                            onClick={removeLogo}
+                            className="brandqr__remove-logo"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className={`brandqr__qr-results ${qrCodeDataURL ? 'brandqr__qr-results--visible' : ''}`}>
+                      {qrCodeDataURL && (
+                        <>
+                          <div className="brandqr__qr-preview">
+                            <img src={qrCodeDataURL} alt="QR Code Preview" className="brandqr__qr-image" />
+                          </div>
+
+                          <div className="brandqr__download-buttons">
+                            <button
+                              className="brandqr__download-btn brandqr__download-btn--png"
+                              onClick={() => downloadQRCode('png')}
+                            >
+                              Download PNG
+                            </button>
+                            <button
+                              className="brandqr__download-btn brandqr__download-btn--svg"
+                              onClick={() => downloadQRCode('svg')}
+                            >
+                              Download SVG
+                            </button>
+                            <button
+                              className={`brandqr__download-btn brandqr__download-btn--save ${currentQRSaved ? 'brandqr__download-btn--saved' : ''}`}
+                              onClick={saveQRCodeToDatabase}
+                              disabled={isSaving || currentQRSaved}
+                            >
+                              {isSaving ? 'Saving...' : currentQRSaved ? 'Saved ✓' : 'Save QR Code'}
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {user ? (
-        <UserCodesDashboard
-          qrCodes={savedQRCodes}
-          onEdit={(qr) => {
-            setNotification({ type: 'info', message: 'Edit functionality coming soon!' })
-          }}
-          onDownload={(qr) => {
-            const link = document.createElement('a')
-            link.href = qr.qr_image_data
-            link.download = `${qr.title.replace(/[^a-z0-9]/gi, '_')}.png`
-            document.body.appendChild(link)
-            link.click()
-            document.body.removeChild(link)
-          }}
-          onDelete={deleteQRCode}
-        />
+          </section>
+        </>
       ) : (
         <>
+          {/* Marketing Hero for Non-logged-in Users */}
+          <section className="brandqr__hero">
+            <div className="brandqr__hero-content">
+              <div className="brandqr__hero-text">
+                <h1 className="brandqr__hero-title">
+                  Create Trackable & Branded QR Codes Instantly.
+                </h1>
+                <p className="brandqr__hero-subtitle">
+                  Design beautiful, logo-embedded QR Codes in seconds. Unlock real-time scan analytics and change your link anytime.
+                </p>
+              </div>
+
+              <div className="brandqr__hero-visual">
+                <div className={`brandqr__dashboard ${isDashboardActive ? 'brandqr__dashboard--active' : ''}`}>
+                  <div className="brandqr__dashboard-header">
+                    <div className="brandqr__dashboard-logo">
+                      <div className="brandqr__dashboard-logo-icon"></div>
+                      <span>BrandQR</span>
+                    </div>
+                    <div className="brandqr__dashboard-actions">
+                      <div className="brandqr__dashboard-action-icon"></div>
+                      <div className="brandqr__dashboard-action-icon"></div>
+                    </div>
+                  </div>
+
+                  <div className="brandqr__generator-card">
+                    <div className="brandqr__input-wrapper">
+                      <input
+                        type="text"
+                        className="brandqr__input"
+                        placeholder="Enter URL, Text, or More..."
+                        value={inputValue}
+                        onChange={(e) => setInputValue(e.target.value)}
+                        onFocus={() => setIsDashboardActive(true)}
+                        onBlur={() => {
+                          if (!inputValue) setIsDashboardActive(false)
+                        }}
+                      />
+                      <div className="brandqr__type-badge">
+                        <span className="brandqr__type-icon">{getTypeIcon(detectedType)}</span>
+                        <span className="brandqr__type-text">{detectedType}</span>
+                      </div>
+                    </div>
+
+                    <div className="brandqr__color-options">
+                      <label className="brandqr__color-label">QR Color:</label>
+                      <div className="brandqr__color-presets">
+                        <button
+                          className={`brandqr__color-preset ${qrColor === '#000000' ? 'brandqr__color-preset--active' : ''}`}
+                          style={{ background: '#000000' }}
+                          onClick={() => setQrColor('#000000')}
+                          title="Black"
+                        ></button>
+                        <button
+                          className={`brandqr__color-preset ${qrColor === '#8B5CF6' ? 'brandqr__color-preset--active' : ''}`}
+                          style={{ background: '#8B5CF6' }}
+                          onClick={() => setQrColor('#8B5CF6')}
+                          title="Purple"
+                        ></button>
+                        <button
+                          className={`brandqr__color-preset ${qrColor === '#06B6D4' ? 'brandqr__color-preset--active' : ''}`}
+                          style={{ background: '#06B6D4' }}
+                          onClick={() => setQrColor('#06B6D4')}
+                          title="Cyan"
+                        ></button>
+                        <button
+                          className={`brandqr__color-preset ${qrColor === '#EC4899' ? 'brandqr__color-preset--active' : ''}`}
+                          style={{ background: '#EC4899' }}
+                          onClick={() => setQrColor('#EC4899')}
+                          title="Pink"
+                        ></button>
+                        <button
+                          className={`brandqr__color-preset ${qrColor === '#10B981' ? 'brandqr__color-preset--active' : ''}`}
+                          style={{ background: '#10B981' }}
+                          onClick={() => setQrColor('#10B981')}
+                          title="Green"
+                        ></button>
+                      </div>
+                    </div>
+
+                    <div className="brandqr__logo-section">
+                      <label className="brandqr__color-label">Logo (Optional):</label>
+                      {!logoPreview ? (
+                        <div className="brandqr__logo-upload">
+                          <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            onChange={handleLogoUpload}
+                            className="brandqr__file-input"
+                            id="logo-upload-brand"
+                          />
+                          <label htmlFor="logo-upload-brand" className="brandqr__file-label">
+                            <span>📷 Upload Logo</span>
+                          </label>
+                        </div>
+                      ) : (
+                        <div className="brandqr__logo-preview">
+                          <img src={logoPreview} alt="Logo preview" className="brandqr__logo-image" />
+                          <button
+                            type="button"
+                            onClick={removeLogo}
+                            className="brandqr__remove-logo"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className={`brandqr__qr-results ${qrCodeDataURL ? 'brandqr__qr-results--visible' : ''}`}>
+                      {qrCodeDataURL && (
+                        <>
+                          <div className="brandqr__qr-preview">
+                            <img src={qrCodeDataURL} alt="QR Code Preview" className="brandqr__qr-image" />
+                          </div>
+
+                          <div className="brandqr__download-buttons">
+                            <button
+                              className="brandqr__download-btn brandqr__download-btn--png"
+                              onClick={() => downloadQRCode('png')}
+                            >
+                              Download PNG
+                            </button>
+                            <button
+                              className="brandqr__download-btn brandqr__download-btn--svg"
+                              onClick={() => downloadQRCode('svg')}
+                            >
+                              Download SVG
+                            </button>
+                            <button
+                              className={`brandqr__download-btn brandqr__download-btn--save ${currentQRSaved ? 'brandqr__download-btn--saved' : ''}`}
+                              onClick={saveQRCodeToDatabase}
+                              disabled={isSaving || currentQRSaved}
+                            >
+                              {isSaving ? 'Saving...' : currentQRSaved ? 'Saved ✓' : 'Save QR Code'}
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Features Section for Non-logged-in Users */}
           <section className="brandqr__features">
         <div className="brandqr__features-container">
           <h2 className="brandqr__section-title">Powerful Features</h2>
