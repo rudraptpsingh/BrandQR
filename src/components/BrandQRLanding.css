@@ -1677,7 +1677,32 @@
   }
 
   .brandqr__hero {
-    padding: 4rem 1.5rem 3rem;
+    padding: 4rem 1rem 3rem;
+  }
+
+  .brandqr__hero-visual {
+    padding: 0 0.5rem;
+  }
+
+  .brandqr__dashboard {
+    padding: 1.25rem;
+    border-radius: 16px;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .brandqr__generator-card {
+    padding: 1.25rem;
+    border-radius: 12px;
+  }
+
+  .brandqr__input {
+    padding: 0.875rem 1rem;
+    font-size: 0.875rem;
+  }
+
+  .brandqr__dashboard-header {
+    margin-bottom: 1rem;
   }
 
   .brandqr__hero-title {
@@ -1701,7 +1726,7 @@
   .brandqr__bento-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .brandqr__feature-card--tall,
   .brandqr__feature-card--short {
     min-height: 320px;
