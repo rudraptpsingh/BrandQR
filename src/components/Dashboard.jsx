@@ -15,6 +15,44 @@ const Dashboard = ({ user, savedQRCodes, onDeleteQRCode, inputValue, setInputVal
   const [selectedPattern, setSelectedPattern] = useState('square')
   const [gradientEnabled, setGradientEnabled] = useState(false)
 
+  // My Assets filtering state
+  const [assetsSearchTerm, setAssetsSearchTerm] = useState('')
+  const [selectedTagFilter, setSelectedTagFilter] = useState('all')
+
+  // Templates state (Step 3.4)
+  const [templates, setTemplates] = useState([
+    {
+      id: 'template-1',
+      name: 'Brand Website',
+      design_config: {
+        color: '#8B5CF6',
+        pattern: 'round',
+        gradient: true
+      },
+      preview: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9InVybCgjZ3JhZGllbnQpIi8+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJncmFkaWVudCIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPjxzdG9wIHN0b3AtY29sb3I9IiM4QjVDRjYiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiMwNkI2RDQiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48L3N2Zz4='
+    },
+    {
+      id: 'template-2',
+      name: 'Business Card',
+      design_config: {
+        color: '#10B981',
+        pattern: 'square',
+        gradient: false
+      },
+      preview: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiMxMEI5ODEiLz48L3N2Zz4='
+    },
+    {
+      id: 'template-3',
+      name: 'Social Media',
+      design_config: {
+        color: '#EC4899',
+        pattern: 'diamond',
+        gradient: true
+      },
+      preview: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9InVybCgjZ3JhZGllbnQyKSIvPjxkZWZzPjxsaW5lYXJHcmFkaWVudCBpZD0iZ3JhZGllbnQyIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+PHN0b3Agc3RvcC1jb2xvcj0iI0VDNDg5OSIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iI0Y5NzMxNiIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjwvc3ZnPg=='
+    }
+  ])
+
   // Calculate stats
   const calculateStats = () => {
     const totalCodes = savedQRCodes.length
@@ -74,6 +112,39 @@ const Dashboard = ({ user, savedQRCodes, onDeleteQRCode, inputValue, setInputVal
     // Clear input when changing destination types
     if (destination !== 'url') {
       setInputValue('')
+    }
+  }
+
+  // Template functionality (Step 3.4)
+  const saveAsTemplate = () => {
+    const templateName = prompt('Enter a name for this template:') || `Template ${templates.length + 1}`
+
+    const newTemplate = {
+      id: `template-${Date.now()}`,
+      name: templateName,
+      design_config: {
+        color: qrColor,
+        pattern: selectedPattern,
+        gradient: gradientEnabled
+      },
+      preview: qrCodeDataURL || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9IiM5Q0EzQUYiLz4='
+    }
+
+    setTemplates([...templates, newTemplate])
+    alert(`Template "${templateName}" saved successfully!`)
+  }
+
+  const loadTemplate = (template) => {
+    setQrColor(template.design_config.color)
+    setSelectedPattern(template.design_config.pattern)
+    setGradientEnabled(template.design_config.gradient || false)
+    setActiveTab('create')
+    alert(`Template "${template.name}" loaded!`)
+  }
+
+  const deleteTemplate = (templateId) => {
+    if (window.confirm('Are you sure you want to delete this template?')) {
+      setTemplates(templates.filter(t => t.id !== templateId))
     }
   }
 
@@ -277,7 +348,7 @@ const Dashboard = ({ user, savedQRCodes, onDeleteQRCode, inputValue, setInputVal
                             placeholder="Add tags (press Enter)..."
                             value={tagInput}
                             onChange={(e) => setTagInput(e.target.value)}
-                            onKeyPress={handleTagInputKeyPress}
+                            onKeyDown={handleTagInputKeyPress}
                           />
                           <div className="dashboard__tags-list">
                             {tags.map((tag, index) => (
@@ -831,6 +902,21 @@ const Dashboard = ({ user, savedQRCodes, onDeleteQRCode, inputValue, setInputVal
                               >
                                 {isSaving ? 'Saving...' : currentQRSaved ? 'Saved ✓' : 'Save'}
                               </button>
+
+                              {qrCodeDataURL && (
+                                <button
+                                  className="dashboard__download-btn dashboard__download-btn--template"
+                                  onClick={saveAsTemplate}
+                                  title="Save current design as template"
+                                >
+                                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H16L21 8V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                    <path d="M17 21V13H7V21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                    <path d="M7 3V8H15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                  </svg>
+                                  Template
+                                </button>
+                              )}
                             </div>
                           </>
                         ) : (
@@ -861,10 +947,58 @@ const Dashboard = ({ user, savedQRCodes, onDeleteQRCode, inputValue, setInputVal
                 <h1 className="dashboard__page-title">My Assets</h1>
                 <p className="dashboard__page-subtitle">Manage and organize all your QR codes</p>
 
+                {/* Filtering Controls (Step 3.1) */}
+                <div className="dashboard__assets-filters">
+                  <div className="dashboard__search-container">
+                    <div className="dashboard__search-wrapper">
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="dashboard__search-icon">
+                        <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2"/>
+                        <path d="21 21L16.65 16.65" stroke="currentColor" strokeWidth="2"/>
+                      </svg>
+                      <input
+                        type="text"
+                        className="dashboard__glass-input dashboard__search-input"
+                        placeholder="Search by code title..."
+                        value={assetsSearchTerm}
+                        onChange={(e) => setAssetsSearchTerm(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="dashboard__filter-container">
+                    <select
+                      className="dashboard__glass-input dashboard__select dashboard__tag-filter"
+                      value={selectedTagFilter}
+                      onChange={(e) => setSelectedTagFilter(e.target.value)}
+                    >
+                      <option value="all">All Projects/Tags</option>
+                      {/* Extract unique tags from saved QR codes */}
+                      {[...new Set(
+                        savedQRCodes
+                          .flatMap(qr => qr.tags || [])
+                          .filter(tag => tag && tag.trim())
+                      )].map(tag => (
+                        <option key={tag} value={tag}>{tag}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
                 <UserCodesDashboard
-                  qrCodes={savedQRCodes}
+                  qrCodes={savedQRCodes.filter(qr => {
+                    // Filter by search term
+                    const matchesSearch = assetsSearchTerm === '' ||
+                      qr.title.toLowerCase().includes(assetsSearchTerm.toLowerCase())
+
+                    // Filter by tag
+                    const matchesTag = selectedTagFilter === 'all' ||
+                      (qr.tags && qr.tags.includes(selectedTagFilter))
+
+                    return matchesSearch && matchesTag
+                  })}
                   onEdit={(qr) => {
-                    // Edit functionality placeholder
+                    // TODO: Implement edit functionality
+                    alert('Edit functionality coming soon!')
                   }}
                   onDownload={(qr) => {
                     const link = document.createElement('a')
@@ -875,6 +1009,8 @@ const Dashboard = ({ user, savedQRCodes, onDeleteQRCode, inputValue, setInputVal
                     document.body.removeChild(link)
                   }}
                   onDelete={onDeleteQRCode}
+                  searchTerm={assetsSearchTerm}
+                  tagFilter={selectedTagFilter}
                 />
               </div>
             </div>
@@ -887,80 +1023,108 @@ const Dashboard = ({ user, savedQRCodes, onDeleteQRCode, inputValue, setInputVal
                 <h1 className="dashboard__page-title">Templates</h1>
                 <p className="dashboard__page-subtitle">Start with pre-designed QR code templates</p>
 
-                <div className="dashboard__templates-grid">
-                  <div className="dashboard__template-card">
-                    <div className="dashboard__template-icon">
-                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M10 13C10.4295 13.5741 10.9774 14.0491 11.6066 14.3929C12.2357 14.7367 12.9315 14.9411 13.6467 14.9923C14.3618 15.0435 15.0796 14.9403 15.7513 14.6897C16.4231 14.4392 17.0331 14.047 17.54 13.54L20.54 10.54C21.4508 9.59695 21.9548 8.33394 21.9434 7.02296C21.932 5.71198 21.4061 4.45791 20.4791 3.53087C19.5521 2.60383 18.298 2.07799 16.987 2.0666C15.676 2.0552 14.413 2.55918 13.47 3.46997L11.75 5.17997" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M14 11C13.5705 10.4259 13.0226 9.95083 12.3934 9.60704C11.7642 9.26325 11.0685 9.05885 10.3533 9.00765C9.63819 8.95644 8.92037 9.05963 8.24861 9.31018C7.57685 9.56073 6.96689 9.9529 6.45996 10.46L3.45996 13.46C2.54917 14.403 2.04519 15.666 2.05659 16.977C2.06798 18.288 2.59382 19.5421 3.52086 20.4691C4.4479 21.3961 5.70197 21.922 7.01295 21.9334C8.32393 21.9448 9.58694 21.4408 10.53 20.53L12.24 18.82" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
+                {/* Custom Templates (Step 3.4) */}
+                <div className="dashboard__templates-section">
+                  <h2 className="dashboard__section-title">Saved Templates</h2>
+                  {templates.length > 0 ? (
+                    <div className="dashboard__templates-grid">
+                      {templates.map((template) => (
+                        <div key={template.id} className="dashboard__template-card dashboard__template-card--custom">
+                          <div className="dashboard__template-preview">
+                            <img src={template.preview} alt={template.name} className="dashboard__template-preview-image" />
+                            <div className="dashboard__template-overlay">
+                              <button
+                                className="dashboard__template-action dashboard__template-action--load"
+                                onClick={() => loadTemplate(template)}
+                                title="Load Template"
+                              >
+                                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                  <path d="M3 16L10 8L14 12L21 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                  <path d="M21 5H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                  <path d="M21 5V10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                </svg>
+                              </button>
+                              <button
+                                className="dashboard__template-action dashboard__template-action--delete"
+                                onClick={() => deleteTemplate(template.id)}
+                                title="Delete Template"
+                              >
+                                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                  <path d="M3 6H5H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                  <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                </svg>
+                              </button>
+                            </div>
+                          </div>
+                          <div className="dashboard__template-info">
+                            <h3 className="dashboard__template-name">{template.name}</h3>
+                            <div className="dashboard__template-config">
+                              <span className="dashboard__template-color" style={{ backgroundColor: template.design_config.color }}></span>
+                              <span className="dashboard__template-pattern">{template.design_config.pattern}</span>
+                              {template.design_config.gradient && <span className="dashboard__template-gradient">Gradient</span>}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                    <h3>Website URL</h3>
-                    <p>Direct users to your website or landing page</p>
-                    <button className="dashboard__template-btn" onClick={() => setActiveTab('create')}>Use Template</button>
-                  </div>
+                  ) : (
+                    <div className="dashboard__templates-empty">
+                      <div className="dashboard__empty-icon">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <rect x="3" y="3" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
+                          <rect x="3" y="14" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
+                          <rect x="14" y="3" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
+                          <rect x="14" y="14" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
+                        </svg>
+                      </div>
+                      <h3>No saved templates</h3>
+                      <p>Create a QR code design and save it as a template for future use</p>
+                      <button className="dashboard__template-btn" onClick={() => setActiveTab('create')}>Create First Template</button>
+                    </div>
+                  )}
+                </div>
 
-                  <div className="dashboard__template-card">
-                    <div className="dashboard__template-icon">
-                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M4 4H20C21.1 4 22 4.9 22 6V18C22 19.1 21.1 20 20 20H4C2.9 20 2 19.1 2 18V6C2 4.9 2.9 4 4 4Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M22 6L12 13L2 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
+                {/* Default Templates */}
+                <div className="dashboard__templates-section">
+                  <h2 className="dashboard__section-title">Quick Start Templates</h2>
+                  <div className="dashboard__templates-grid">
+                    <div className="dashboard__template-card">
+                      <div className="dashboard__template-icon">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M10 13C10.4295 13.5741 10.9774 14.0491 11.6066 14.3929C12.2357 14.7367 12.9315 14.9411 13.6467 14.9923C14.3618 15.0435 15.0796 14.9403 15.7513 14.6897C16.4231 14.4392 17.0331 14.047 17.54 13.54L20.54 10.54C21.4508 9.59695 21.9548 8.33394 21.9434 7.02296C21.932 5.71198 21.4061 4.45791 20.4791 3.53087C19.5521 2.60383 18.298 2.07799 16.987 2.0666C15.676 2.0552 14.413 2.55918 13.47 3.46997L11.75 5.17997" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M14 11C13.5705 10.4259 13.0226 9.95083 12.3934 9.60704C11.7642 9.26325 11.0685 9.05885 10.3533 9.00765C9.63819 8.95644 8.92037 9.05963 8.24861 9.31018C7.57685 9.56073 6.96689 9.9529 6.45996 10.46L3.45996 13.46C2.54917 14.403 2.04519 15.666 2.05659 16.977C2.06798 18.288 2.59382 19.5421 3.52086 20.4691C4.4479 21.3961 5.70197 21.922 7.01295 21.9334C8.32393 21.9448 9.58694 21.4408 10.53 20.53L12.24 18.82" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                      <h3>Website URL</h3>
+                      <p>Direct users to your website or landing page</p>
+                      <button className="dashboard__template-btn" onClick={() => { setSelectedDestination('url'); setActiveTab('create'); }}>Use Template</button>
                     </div>
-                    <h3>Email Contact</h3>
-                    <p>Allow customers to contact you via email</p>
-                    <button className="dashboard__template-btn" onClick={() => setActiveTab('create')}>Use Template</button>
-                  </div>
 
-                  <div className="dashboard__template-card">
-                    <div className="dashboard__template-icon">
-                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M21 10C21 17 12 23 12 23C12 23 3 17 3 10C3 7.61305 3.94821 5.32387 5.63604 3.63604C7.32387 1.94821 9.61305 1 12 1C14.3869 1 16.6761 1.94821 18.364 3.63604C20.0518 5.32387 21 7.61305 21 10Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M12 13C13.6569 13 15 11.6569 15 10C15 8.34315 13.6569 7 12 7C10.3431 7 9 8.34315 9 10C9 11.6569 10.3431 13 12 13Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
+                    <div className="dashboard__template-card">
+                      <div className="dashboard__template-icon">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          <circle cx="12" cy="7" r="4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                      <h3>vCard Contact</h3>
+                      <p>Share your complete contact information</p>
+                      <button className="dashboard__template-btn" onClick={() => { setSelectedDestination('vcard'); setActiveTab('create'); }}>Use Template</button>
                     </div>
-                    <h3>Location</h3>
-                    <p>Share your business location coordinates</p>
-                    <button className="dashboard__template-btn" onClick={() => setActiveTab('create')}>Use Template</button>
-                  </div>
 
-                  <div className="dashboard__template-card">
-                    <div className="dashboard__template-icon">
-                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M5.52 19C5.19 19 4.86 18.89 4.61 18.64C4.11 18.14 4.11 17.33 4.61 16.83L7.41 14.03C7.41 14.03 7.41 14.03 7.42 14.02C8.29 13.16 9.36 12.5 10.55 12.12L12.74 11.42C13.07 11.31 13.4 11.43 13.59 11.7C13.78 11.97 13.76 12.34 13.53 12.57L9.83 16.27C9.33 16.77 9.33 17.58 9.83 18.08C10.33 18.58 11.14 18.58 11.64 18.08L15.34 14.38C15.57 14.15 15.94 14.13 16.21 14.32C16.48 14.51 16.6 14.84 16.49 15.17L15.79 17.36C15.41 18.55 14.75 19.62 13.89 20.49C13.89 20.49 13.89 20.49 13.88 20.5L11.08 23.3C10.58 23.8 9.77 23.8 9.27 23.3C8.77 22.8 8.77 21.99 9.27 21.49L11.88 18.88C11.96 18.8 11.96 18.67 11.88 18.59C11.8 18.51 11.67 18.51 11.59 18.59L8.98 21.2C8.48 21.7 7.67 21.7 7.17 21.2C6.67 20.7 6.67 19.89 7.17 19.39L9.78 16.78C9.86 16.7 9.86 16.57 9.78 16.49C9.7 16.41 9.57 16.41 9.49 16.49L6.88 19.1C6.63 19.35 6.3 19.46 5.97 19.46L5.52 19Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M18.85 8.44C19.44 8.85 19.96 9.36 20.39 9.95" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M16.93 6.52C17.91 6.93 18.79 7.56 19.5 8.36" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M15.01 4.6C16.46 4.9 17.78 5.62 18.85 6.65" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
+                    <div className="dashboard__template-card">
+                      <div className="dashboard__template-icon">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M5.52 19C5.19 19 4.86 18.89 4.61 18.64C4.11 18.14 4.11 17.33 4.61 16.83L7.41 14.03C7.41 14.03 7.41 14.03 7.42 14.02C8.29 13.16 9.36 12.5 10.55 12.12L12.74 11.42C13.07 11.31 13.4 11.43 13.59 11.7C13.78 11.97 13.76 12.34 13.53 12.57L9.83 16.27C9.33 16.77 9.33 17.58 9.83 18.08C10.33 18.58 11.14 18.58 11.64 18.08L15.34 14.38C15.57 14.15 15.94 14.13 16.21 14.32C16.48 14.51 16.6 14.84 16.49 15.17L15.79 17.36C15.41 18.55 14.75 19.62 13.89 20.49C13.89 20.49 13.89 20.49 13.88 20.5L11.08 23.3C10.58 23.8 9.77 23.8 9.27 23.3C8.77 22.8 8.77 21.99 9.27 21.49L11.88 18.88C11.96 18.8 11.96 18.67 11.88 18.59C11.8 18.51 11.67 18.51 11.59 18.59L8.98 21.2C8.48 21.7 7.67 21.7 7.17 21.2C6.67 20.7 6.67 19.89 7.17 19.39L9.78 16.78C9.86 16.7 9.86 16.57 9.78 16.49C9.7 16.41 9.57 16.41 9.49 16.49L6.88 19.1C6.63 19.35 6.3 19.46 5.97 19.46L5.52 19Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M18.85 8.44C19.44 8.85 19.96 9.36 20.39 9.95" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M16.93 6.52C17.91 6.93 18.79 7.56 19.5 8.36" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M15.01 4.6C16.46 4.9 17.78 5.62 18.85 6.65" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                      <h3>WiFi Access</h3>
+                      <p>Let guests connect to your WiFi network</p>
+                      <button className="dashboard__template-btn" onClick={() => { setSelectedDestination('wifi'); setActiveTab('create'); }}>Use Template</button>
                     </div>
-                    <h3>WiFi Access</h3>
-                    <p>Let guests connect to your WiFi network</p>
-                    <button className="dashboard__template-btn" onClick={() => setActiveTab('create')}>Use Template</button>
-                  </div>
-
-                  <div className="dashboard__template-card">
-                    <div className="dashboard__template-icon">
-                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <rect x="2" y="6" width="20" height="12" rx="2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M7 15L10 12L7 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M13 15H17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </div>
-                    <h3>Text Message</h3>
-                    <p>Pre-compose SMS messages for customers</p>
-                    <button className="dashboard__template-btn" onClick={() => setActiveTab('create')}>Use Template</button>
-                  </div>
-
-                  <div className="dashboard__template-card">
-                    <div className="dashboard__template-icon">
-                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        <circle cx="12" cy="7" r="4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </div>
-                    <h3>vCard Contact</h3>
-                    <p>Share your complete contact information</p>
-                    <button className="dashboard__template-btn" onClick={() => setActiveTab('create')}>Use Template</button>
                   </div>
                 </div>
               </div>

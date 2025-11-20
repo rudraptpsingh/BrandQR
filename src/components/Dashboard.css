@@ -1207,7 +1207,273 @@
 }
 
 /* ========================================
-   Templates Tab
+   My Assets - Filtering Controls (Step 3.1)
+   ======================================== */
+
+.dashboard__assets-filters {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  padding: 0 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.dashboard__search-container {
+  flex: 2;
+  min-width: 300px;
+}
+
+.dashboard__search-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.dashboard__search-icon {
+  position: absolute;
+  left: 1rem;
+  width: 18px;
+  height: 18px;
+  color: rgba(255, 255, 255, 0.4);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.dashboard__search-input {
+  padding-left: 3rem !important;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  transition: all 0.3s ease;
+}
+
+.dashboard__search-input:focus {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(139, 92, 246, 0.6);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+}
+
+.dashboard__search-input:focus + .dashboard__search-icon {
+  color: rgba(139, 92, 246, 0.8);
+}
+
+.dashboard__filter-container {
+  flex: 1;
+  min-width: 200px;
+}
+
+.dashboard__tag-filter {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  cursor: pointer;
+}
+
+.dashboard__tag-filter:focus {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(139, 92, 246, 0.6);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+}
+
+@media (max-width: 768px) {
+  .dashboard__assets-filters {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .dashboard__search-container,
+  .dashboard__filter-container {
+    width: 100%;
+    min-width: unset;
+  }
+}
+
+/* ========================================
+   Enhanced Templates Tab (Step 3.4)
+   ======================================== */
+
+.dashboard__templates-section {
+  margin-bottom: 3rem;
+}
+
+.dashboard__templates-section:last-child {
+  margin-bottom: 0;
+}
+
+.dashboard__section-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0 0 1.5rem 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Custom template cards with previews */
+.dashboard__template-card--custom {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  overflow: hidden;
+  transition: all 0.3s;
+  position: relative;
+}
+
+.dashboard__template-card--custom:hover {
+  background: rgba(255, 255, 255, 0.06);
+  transform: translateY(-4px);
+  border-color: rgba(139, 92, 246, 0.3);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+}
+
+.dashboard__template-preview {
+  position: relative;
+  width: 100%;
+  height: 180px;
+  overflow: hidden;
+  border-radius: 16px 16px 0 0;
+}
+
+.dashboard__template-preview-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s;
+}
+
+.dashboard__template-card--custom:hover .dashboard__template-preview-image {
+  transform: scale(1.05);
+}
+
+.dashboard__template-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.dashboard__template-card--custom:hover .dashboard__template-overlay {
+  opacity: 1;
+}
+
+.dashboard__template-action {
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 50%;
+  color: #1f2937;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+}
+
+.dashboard__template-action:hover {
+  background: #ffffff;
+  transform: scale(1.1);
+}
+
+.dashboard__template-action--load {
+  background: linear-gradient(135deg, #10B981, #059669);
+  color: #ffffff;
+}
+
+.dashboard__template-action--delete {
+  background: linear-gradient(135deg, #EF4444, #DC2626);
+  color: #ffffff;
+}
+
+.dashboard__template-action svg {
+  width: 20px;
+  height: 20px;
+}
+
+.dashboard__template-info {
+  padding: 1.5rem;
+}
+
+.dashboard__template-name {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0 0 0.75rem 0;
+}
+
+.dashboard__template-config {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.dashboard__template-color {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.dashboard__template-pattern,
+.dashboard__template-gradient {
+  padding: 0.25rem 0.5rem;
+  background: rgba(139, 92, 246, 0.15);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 12px;
+  color: #c4b5fd;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.dashboard__template-gradient {
+  background: rgba(6, 182, 212, 0.15);
+  border-color: rgba(6, 182, 212, 0.3);
+  color: #67e8f9;
+}
+
+/* Empty state for templates */
+.dashboard__templates-empty {
+  text-align: center;
+  padding: 3rem 2rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 2px dashed rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+}
+
+.dashboard__templates-empty h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 1rem 0 0.5rem 0;
+}
+
+.dashboard__templates-empty p {
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0 0 1.5rem 0;
+}
+
+/* Save as Template button */
+.dashboard__download-btn--template {
+  background: linear-gradient(135deg, #F59E0B, #D97706);
+  color: #ffffff;
+}
+
+.dashboard__download-btn--template:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(245, 158, 11, 0.4);
+}
+
+/* ========================================
+   Original Templates Tab
    ======================================== */
 
 .dashboard__templates-grid {
@@ -1315,4 +1581,53 @@
     width: 100%;
     justify-content: center;
   }
+
+  /* Enhanced mobile layout for templates */
+  .dashboard__templates-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard__template-card--custom {
+    max-width: none;
+  }
+
+  .dashboard__template-preview {
+    height: 200px;
+  }
+}
+
+/* ========================================
+   Final Dashboard Cohesion Check (Step 3.5)
+   ======================================== */
+
+/* Ensure all components maintain glass effect with 1px light gray border */
+.dashboard__config-card,
+.dashboard__preview-card,
+.dashboard__template-card,
+.dashboard__template-card--custom,
+.dashboard__stat-glass-card,
+.dashboard__latest-glass-card {
+  backdrop-filter: blur(16px) saturate(120%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Enhanced hover states for better user feedback */
+.dashboard__config-card:hover,
+.dashboard__template-card:hover {
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Consistent spacing and typography */
+.dashboard__page-title,
+.dashboard__section-title {
+  background: linear-gradient(to bottom, #ffffff 0%, rgba(255, 255, 255, 0.9) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.dashboard__page-subtitle {
+  color: #9CA3AF;
 }

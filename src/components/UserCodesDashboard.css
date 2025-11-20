@@ -548,3 +548,127 @@
     width: 100%;
   }
 }
+
+/* ============================================
+   Enhanced Asset Management (Phase 3)
+   ============================================ */
+
+/* Enhanced action button styling (Step 3.3) */
+.code-card__action-button--edit {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.code-card__action-button--edit:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.code-card__action-button--analytics {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.code-card__action-button--analytics:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.code-card__action-button--highlighted {
+  background: linear-gradient(135deg, #8B5CF6, #06B6D4) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3) !important;
+}
+
+.code-card__action-button--highlighted:hover {
+  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4) !important;
+}
+
+/* Enhanced card styling */
+.code-card--enhanced {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.code-card__title-section {
+  margin-bottom: 1rem;
+}
+
+.code-card__destination-type {
+  font-size: 1.25rem;
+  opacity: 0.7;
+}
+
+.code-card__analytics-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0.75rem 0;
+}
+
+.code-card__total-scans {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.code-card__scans-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.code-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin-top: 0.5rem;
+}
+
+.code-card__tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  background: rgba(139, 92, 246, 0.15);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 12px;
+  color: #c4b5fd;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.code-card__tag--more {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.code-card__meta-section {
+  margin-bottom: 1rem;
+}
+
+/* Action button layout improvements */
+.code-card__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.code-card__actions-primary {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.code-card__actions-secondary {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.code-card__actions-primary .code-card__action-button,
+.code-card__actions-secondary .code-card__action-button {
+  flex: 1;
+  justify-content: center;
+}
