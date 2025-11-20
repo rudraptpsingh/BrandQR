@@ -30,6 +30,8 @@ const BrandQRLanding = () => {
   const [currentQRSaved, setCurrentQRSaved] = useState(false)
   const [downloadGateOpen, setDownloadGateOpen] = useState(false)
   const [pendingDownload, setPendingDownload] = useState(null)
+  const [shortUrl, setShortUrl] = useState('')
+  const [isGeneratingShortUrl, setIsGeneratingShortUrl] = useState(false)
   const debounceTimer = useRef(null)
   const canvasRef = useRef(null)
   const fileInputRef = useRef(null)
@@ -254,12 +256,49 @@ const BrandQRLanding = () => {
   const generateQRCode = async (text, color = qrColor, pattern = selectedPattern) => {
     if (!text.trim()) {
       setQrCodeDataURL('')
+      setShortUrl('')
       return
     }
 
     try {
-      // Base QR Code generation
-      let dataURL = await QRCode.toDataURL(text, {
+      // For logged-in users with URL type, generate short URL
+      let qrContent = text
+      if (user && detectedType === 'url') {
+        setIsGeneratingShortUrl(true)
+        try {
+          const { data: { session } } = await supabase.auth.getSession()
+          const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-short-url`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${session?.access_token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              destinationUrl: text,
+              userId: user.id,
+              qrType: detectedType,
+              qrColor: color,
+              logoData: logoPreview || '',
+            }),
+          })
+
+          if (response.ok) {
+            const { shortUrl: generatedUrl, slug } = await response.json()
+            qrContent = generatedUrl
+            setShortUrl(generatedUrl)
+          }
+        } catch (shortUrlError) {
+          console.error('Failed to generate short URL:', shortUrlError)
+          // Fall back to using the original URL
+        } finally {
+          setIsGeneratingShortUrl(false)
+        }
+      } else {
+        setShortUrl('')
+      }
+
+      // Base QR Code generation using short URL if available
+      let dataURL = await QRCode.toDataURL(qrContent, {
         width: 400,
         margin: 2,
         errorCorrectionLevel: 'H',
@@ -282,6 +321,7 @@ const BrandQRLanding = () => {
       setCurrentQRSaved(false)
     } catch (err) {
       console.error('QR generation error:', err)
+      setIsGeneratingShortUrl(false)
     }
   }
 
@@ -678,6 +718,8 @@ const BrandQRLanding = () => {
             currentQRSaved={currentQRSaved}
             isDashboardActive={isDashboardActive}
             setIsDashboardActive={setIsDashboardActive}
+            shortUrl={shortUrl}
+            isGeneratingShortUrl={isGeneratingShortUrl}
           />
         </>
       ) : (

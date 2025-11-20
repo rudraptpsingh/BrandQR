@@ -3,7 +3,7 @@ import './Dashboard.css'
 import UserCodesDashboard from './UserCodesDashboard'
 import Notification from './Notification'
 
-const Dashboard = ({ user, savedQRCodes, onDeleteQRCode, inputValue, setInputValue, detectedType, qrColor, setQrColor, selectedPattern, setSelectedPattern, qrCodeDataURL, generateQRCode, logoPreview, logoImage, handleLogoUpload, removeLogo, fileInputRef, getTypeIcon, downloadQRCode, saveQRCodeToDatabase, isSaving, currentQRSaved, isDashboardActive, setIsDashboardActive }) => {
+const Dashboard = ({ user, savedQRCodes, onDeleteQRCode, inputValue, setInputValue, detectedType, qrColor, setQrColor, selectedPattern, setSelectedPattern, qrCodeDataURL, generateQRCode, logoPreview, logoImage, handleLogoUpload, removeLogo, fileInputRef, getTypeIcon, downloadQRCode, saveQRCodeToDatabase, isSaving, currentQRSaved, isDashboardActive, setIsDashboardActive, shortUrl, isGeneratingShortUrl }) => {
   const [activeTab, setActiveTab] = useState('overview')
   const [notification, setNotification] = useState(null)
 
@@ -855,6 +855,18 @@ const Dashboard = ({ user, savedQRCodes, onDeleteQRCode, inputValue, setInputVal
                                 <span className="dashboard__preview-label">Color:</span>
                                 <span className="dashboard__preview-value" style={{color: qrColor}}>{qrColor}</span>
                               </div>
+                              {shortUrl && (
+                                <div className="dashboard__preview-meta">
+                                  <span className="dashboard__preview-label">Short URL:</span>
+                                  <span className="dashboard__preview-value" style={{color: '#8B5CF6', fontSize: '0.75rem'}}>{shortUrl.replace('https://', '')}</span>
+                                </div>
+                              )}
+                              {isGeneratingShortUrl && (
+                                <div className="dashboard__preview-meta">
+                                  <span className="dashboard__preview-label">Generating...</span>
+                                  <span className="dashboard__preview-value">Dynamic link</span>
+                                </div>
+                              )}
                               {logoPreview && (
                                 <div className="dashboard__preview-meta">
                                   <span className="dashboard__preview-label">Logo:</span>
