@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import './Dashboard.css'
 import UserCodesDashboard from './UserCodesDashboard'
+import Notification from './Notification'
 
 const Dashboard = ({ user, savedQRCodes, onDeleteQRCode, inputValue, setInputValue, detectedType, qrColor, setQrColor, selectedPattern, setSelectedPattern, qrCodeDataURL, generateQRCode, logoPreview, logoImage, handleLogoUpload, removeLogo, fileInputRef, getTypeIcon, downloadQRCode, saveQRCodeToDatabase, isSaving, currentQRSaved, isDashboardActive, setIsDashboardActive }) => {
   const [activeTab, setActiveTab] = useState('overview')
+  const [notification, setNotification] = useState(null)
 
   // New Create New tab state
   const [codeTitle, setCodeTitle] = useState('')
@@ -114,6 +116,11 @@ const Dashboard = ({ user, savedQRCodes, onDeleteQRCode, inputValue, setInputVal
     }
   }
 
+  // Show notification helper
+  const showNotification = (type, message) => {
+    setNotification({ type, message })
+  }
+
   // Template functionality (Step 3.4)
   const saveAsTemplate = () => {
     const templateName = prompt('Enter a name for this template:') || `Template ${templates.length + 1}`
@@ -130,7 +137,7 @@ const Dashboard = ({ user, savedQRCodes, onDeleteQRCode, inputValue, setInputVal
     }
 
     setTemplates([...templates, newTemplate])
-    alert(`Template "${templateName}" saved successfully!`)
+    showNotification('success', `Template "${templateName}" saved successfully!`)
   }
 
   const loadTemplate = (template) => {
@@ -138,17 +145,26 @@ const Dashboard = ({ user, savedQRCodes, onDeleteQRCode, inputValue, setInputVal
     setSelectedPattern(template.design_config.pattern)
     setGradientEnabled(template.design_config.gradient || false)
     setActiveTab('create')
-    alert(`Template "${template.name}" loaded!`)
+    showNotification('success', `Template "${template.name}" loaded!`)
   }
 
   const deleteTemplate = (templateId) => {
+    const template = templates.find(t => t.id === templateId)
     if (window.confirm('Are you sure you want to delete this template?')) {
       setTemplates(templates.filter(t => t.id !== templateId))
+      showNotification('success', `Template "${template?.name || 'Unknown'}" deleted successfully!`)
     }
   }
 
   return (
     <div className="dashboard">
+      {notification && (
+        <Notification
+          type={notification.type}
+          message={notification.message}
+          onClose={() => setNotification(null)}
+        />
+      )}
       <div className="dashboard__container">
         {/* Horizontal Pill Tab Bar */}
         <nav className="dashboard__tab-bar">
