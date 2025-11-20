@@ -792,7 +792,7 @@ const Dashboard = ({ user, savedQRCodes, onDeleteQRCode, inputValue, setInputVal
                                 onClick={() => {
                                   setSelectedPattern('square')
                                   if (inputValue && generateQRCode) {
-                                    generateQRCode(inputValue, qrColor)
+                                    generateQRCode(inputValue, qrColor, 'square')
                                   }
                                 }}
                               >
@@ -804,7 +804,7 @@ const Dashboard = ({ user, savedQRCodes, onDeleteQRCode, inputValue, setInputVal
                                 onClick={() => {
                                   setSelectedPattern('round')
                                   if (inputValue && generateQRCode) {
-                                    generateQRCode(inputValue, qrColor)
+                                    generateQRCode(inputValue, qrColor, 'round')
                                   }
                                 }}
                               >
@@ -816,7 +816,7 @@ const Dashboard = ({ user, savedQRCodes, onDeleteQRCode, inputValue, setInputVal
                                 onClick={() => {
                                   setSelectedPattern('diamond')
                                   if (inputValue && generateQRCode) {
-                                    generateQRCode(inputValue, qrColor)
+                                    generateQRCode(inputValue, qrColor, 'diamond')
                                   }
                                 }}
                               >
