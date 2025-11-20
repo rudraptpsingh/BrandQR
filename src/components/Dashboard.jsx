@@ -2,7 +2,7 @@ import { useState } from 'react'
 import './Dashboard.css'
 import UserCodesDashboard from './UserCodesDashboard'
 
-const Dashboard = ({ user, savedQRCodes, onDeleteQRCode, inputValue, setInputValue, detectedType, qrColor, setQrColor, qrCodeDataURL, logoPreview, logoImage, handleLogoUpload, removeLogo, fileInputRef, getTypeIcon, downloadQRCode, saveQRCodeToDatabase, isSaving, currentQRSaved, isDashboardActive, setIsDashboardActive }) => {
+const Dashboard = ({ user, savedQRCodes, onDeleteQRCode, inputValue, setInputValue, detectedType, qrColor, setQrColor, selectedPattern, setSelectedPattern, qrCodeDataURL, generateQRCode, logoPreview, logoImage, handleLogoUpload, removeLogo, fileInputRef, getTypeIcon, downloadQRCode, saveQRCodeToDatabase, isSaving, currentQRSaved, isDashboardActive, setIsDashboardActive }) => {
   const [activeTab, setActiveTab] = useState('overview')
 
   // New Create New tab state
@@ -12,7 +12,6 @@ const Dashboard = ({ user, savedQRCodes, onDeleteQRCode, inputValue, setInputVal
   const [creationMode, setCreationMode] = useState('single') // 'single' or 'bulk'
   const [selectedDestination, setSelectedDestination] = useState('url')
   const [designExpanded, setDesignExpanded] = useState(true)
-  const [selectedPattern, setSelectedPattern] = useState('square')
   const [gradientEnabled, setGradientEnabled] = useState(false)
 
   // My Assets filtering state
@@ -790,21 +789,36 @@ const Dashboard = ({ user, savedQRCodes, onDeleteQRCode, inputValue, setInputVal
                             <div className="dashboard__pattern-selector">
                               <button
                                 className={`dashboard__pattern-option ${selectedPattern === 'square' ? 'dashboard__pattern-option--active' : ''}`}
-                                onClick={() => setSelectedPattern('square')}
+                                onClick={() => {
+                                  setSelectedPattern('square')
+                                  if (inputValue && generateQRCode) {
+                                    generateQRCode(inputValue, qrColor)
+                                  }
+                                }}
                               >
                                 <div className="dashboard__pattern-preview dashboard__pattern-preview--square"></div>
                                 <span>Square</span>
                               </button>
                               <button
                                 className={`dashboard__pattern-option ${selectedPattern === 'round' ? 'dashboard__pattern-option--active' : ''}`}
-                                onClick={() => setSelectedPattern('round')}
+                                onClick={() => {
+                                  setSelectedPattern('round')
+                                  if (inputValue && generateQRCode) {
+                                    generateQRCode(inputValue, qrColor)
+                                  }
+                                }}
                               >
                                 <div className="dashboard__pattern-preview dashboard__pattern-preview--round"></div>
                                 <span>Round</span>
                               </button>
                               <button
                                 className={`dashboard__pattern-option ${selectedPattern === 'diamond' ? 'dashboard__pattern-option--active' : ''}`}
-                                onClick={() => setSelectedPattern('diamond')}
+                                onClick={() => {
+                                  setSelectedPattern('diamond')
+                                  if (inputValue && generateQRCode) {
+                                    generateQRCode(inputValue, qrColor)
+                                  }
+                                }}
                               >
                                 <div className="dashboard__pattern-preview dashboard__pattern-preview--diamond"></div>
                                 <span>Diamond</span>

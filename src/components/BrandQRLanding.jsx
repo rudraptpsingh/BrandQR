@@ -17,6 +17,7 @@ const BrandQRLanding = () => {
   const [qrCodeDataURL, setQrCodeDataURL] = useState('')
   const [detectedType, setDetectedType] = useState('text')
   const [qrColor, setQrColor] = useState('#000000')
+  const [selectedPattern, setSelectedPattern] = useState('square')
   const [activeDemo, setActiveDemo] = useState(0)
   const [demoQRs, setDemoQRs] = useState({})
   const [isDashboardActive, setIsDashboardActive] = useState(false)
@@ -92,6 +93,39 @@ const BrandQRLanding = () => {
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
+  }
+
+  const applyQRPattern = async (qrDataURL, pattern) => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+
+      const qrImg = new Image()
+      qrImg.onload = () => {
+        canvas.width = qrImg.width
+        canvas.height = qrImg.height
+
+        // For basic pattern implementation, we'll apply simple visual effects
+        if (pattern === 'round') {
+          // Apply slight border radius effect by softening edges
+          ctx.filter = 'blur(0.5px)'
+          ctx.drawImage(qrImg, 0, 0)
+          ctx.filter = 'none'
+        } else if (pattern === 'diamond') {
+          // Apply rotation effect for diamond pattern
+          ctx.save()
+          ctx.translate(canvas.width / 2, canvas.height / 2)
+          ctx.rotate(Math.PI / 4)
+          ctx.drawImage(qrImg, -canvas.width / 2, -canvas.height / 2)
+          ctx.restore()
+        } else {
+          ctx.drawImage(qrImg, 0, 0)
+        }
+
+        resolve(canvas.toDataURL('image/png'))
+      }
+      qrImg.src = qrDataURL
+    })
   }
 
   const embedLogoOnQR = async (qrDataURL, logoImg) => {
@@ -217,13 +251,14 @@ const BrandQRLanding = () => {
     }
   }
 
-  const generateQRCode = async (text, color = qrColor) => {
+  const generateQRCode = async (text, color = qrColor, pattern = selectedPattern) => {
     if (!text.trim()) {
       setQrCodeDataURL('')
       return
     }
 
     try {
+      // Base QR Code generation
       let dataURL = await QRCode.toDataURL(text, {
         width: 400,
         margin: 2,
@@ -233,6 +268,11 @@ const BrandQRLanding = () => {
           light: '#00000000'
         }
       })
+
+      // Apply pattern styling if not square (basic implementation)
+      if (pattern !== 'square') {
+        dataURL = await applyQRPattern(dataURL, pattern)
+      }
 
       if (logoImage) {
         dataURL = await embedLogoOnQR(dataURL, logoImage)
@@ -622,7 +662,10 @@ const BrandQRLanding = () => {
             detectedType={detectedType}
             qrColor={qrColor}
             setQrColor={setQrColor}
+            selectedPattern={selectedPattern}
+            setSelectedPattern={setSelectedPattern}
             qrCodeDataURL={qrCodeDataURL}
+            generateQRCode={generateQRCode}
             logoPreview={logoPreview}
             logoImage={logoImage}
             handleLogoUpload={handleLogoUpload}
